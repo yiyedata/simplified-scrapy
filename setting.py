@@ -1,0 +1,9 @@
+#!/usr/bin/python
+#coding=utf-8
+SPIDERS=[
+  {'file':'spiders.testSpider','class':'TestSpider'}
+]
+#并发下载线程数
+CONCURRENCY=5
+#10秒内请求页面数最大值
+CONCURRENCYPER1S=10
