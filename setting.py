@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
 SPIDERS=[
-  {'file':'spiders.testSpider','class':'TestSpider'}
+  {'file':'spiders.demoSpider','class':'DemoSpider'}
 ]
 #并发下载线程数
 CONCURRENCY=5

@@ -3,10 +3,10 @@
 import json
 from core.logPrint import logPrint,logError,getTime,appendFile
 from core.spider import Spider 
-class TestSpider(Spider):
-  name = 'test-spider'
-  start_urls = ['http://health.sohu.com/','http://health.sina.com.cn/','http://www.39.net/']
-  models = ['auto_all','auto_obj']
+class DemoSpider(Spider):
+  name = 'demo-spider'
+  start_urls = ['http://health.sina.com.cn/']
+  models = ['auto_main_2','auto_obj']
 
   def afterResponse(self, response, cookie, url):
     html = Spider.afterResponse(self,response,cookie,url)
