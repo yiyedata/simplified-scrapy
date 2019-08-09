@@ -1,12 +1,13 @@
 #!/usr/bin/python
 #coding=utf-8
-import json,re,logging,time
+import json,re,logging,time,io,os,hashlib
 from log import Log
 from url_store import UrlStore
 class Spider(Log):
   name = None
   models = None
   concurrencyPer1s=0.5
+  htmlPath='htmls/'
   def __init__(self, name=None):
     if name is not None:
       self.name = name
@@ -43,6 +44,7 @@ class Spider(Log):
       "cookie" : cookie,
       "url" : url
     }
+    self.saveHtml(url,html)
     return html
   def removeScripts(self,html):
     html = re.compile('(?=<[\s]*script[^>]*>)[\s\S]*?(?:</script>)').sub('',html)
@@ -67,6 +69,15 @@ class Spider(Log):
         else:
           self.saveObj(obj)
 
+  def saveHtml(self,url,html):
+    filename = os.path.basename(url)
+    if(not filename):
+      filename = hashlib.md5(url).hexdigest()+'.htm'
+    if(not os.path.exists(self.htmlPath)):
+      os.mkdir(self.htmlPath)
+    file = io.open(self.htmlPath+filename, "w",encoding="utf-8")
+    file.write(html)
+    file.close()
 
   def saveObj(self, data):
     # print data
