@@ -25,11 +25,14 @@ class Extracter:
     print 'Extracter._models',self._models
 
   def extract(self,url,html,ssp):
-    models=[]
-    for modelName in ssp.models:
+    mds = url.get("model")
+    if(not mds):
+      mds = ssp.models
+    models = []
+    for modelName in mds:
       models.append(self._models[modelName])
     
-    data = extractHtml(url["url"],html,models,ssp.models,url.get("title"),ssp)
+    data = extractHtml(url["url"],html,models,mds,url.get("title"))
     ssp.saveData(data)
 
 # print  os.path.abspath(os.curdir)+'/simplified-scrapy/models/'

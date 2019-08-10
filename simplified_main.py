@@ -21,6 +21,8 @@ class SimplifiedMain(Log):
   _spiderDic = {}
   _extracter = Extracter()
   def startThread(self):
+    threadExtract = threading.Thread(target=self.extractThread)
+    threadExtract.start()
     while self._runflag:
       try:
         for ssp in self._spiderDic.values():
@@ -61,6 +63,21 @@ class SimplifiedMain(Log):
     self._spiderDic[fileName]=ssp
     return ssp
 
+  def extractThread(self):
+    while(self._runflag):
+      flag=False
+      for ssp in self._spiderDic.values():
+        try:
+          data = ssp.popHtml()
+          if(data):
+            flag=True
+            self._extracter.extract(data["url"],data["html"],ssp)
+        except Exception as err:
+          self.log(err,logging.ERROR)
+          time.sleep(10)
+      if(not flag):
+        time.sleep(3)
+      time.sleep(0.7)
   def downloadThread(self,url,ssp):
     try:
       if(not url):
@@ -70,9 +87,10 @@ class SimplifiedMain(Log):
       print url['url']
       self._downloadPageNum=self._downloadPageNum+1
       html = execDownload(url,ssp)
-      if(html):
-        self._extracter.extract(url,html,ssp)
-      else:
+      ssp.saveHtml(url,html)
+      if(not html):
+        # self._extracter.extract(url,html,ssp)
+        # else:
         ssp.downloadError(url)
     except Exception as err:
         self.log(err,logging.ERROR)

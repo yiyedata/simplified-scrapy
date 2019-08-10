@@ -103,7 +103,7 @@ def requestGet(url, headers, useIp, ssp=None):
     if response:
       response.close()
 
-def extractHtml(url,html,model,modelName,title=None,ssp=None):
+def extractHtml(url,html,model,modelName,title=None):
   headers = { "Content-Type": "application/json" }
   data={
     'url':url,
@@ -115,7 +115,7 @@ def extractHtml(url,html,model,modelName,title=None,ssp=None):
   }
   data = json.dumps(data)
   # saveFile('extractHtml.txt',data)
-  obj = requestPost('http://www.yiyedata.com/api/extracts',data,headers,False,ssp)
+  obj = requestPost('http://www.yiyedata.com/api/extracts',data,headers)
   return obj#.decode("UTF-8").encode(type)
 
 def test():
