@@ -4,6 +4,7 @@ import json
 from core.logPrint import logPrint,logError,getTime,appendFile
 from core.spider import Spider 
 class DemoSpider(Spider):
+  # concurrencyPer1s=2
   name = 'demo-spider'
   start_urls = ['http://health.sina.com.cn/']
   models = ['auto_main_2','auto_obj']

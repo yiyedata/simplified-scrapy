@@ -1,2 +1,4 @@
 *.pyc
 htmls/*
+obj.json
+*.log

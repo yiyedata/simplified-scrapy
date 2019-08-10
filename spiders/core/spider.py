@@ -7,7 +7,7 @@ from html_store import HtmlStore
 class Spider(Log):
   name = None
   models = None
-  concurrencyPer1s=0.5
+  concurrencyPer1s=1
   def __init__(self, name=None):
     if name is not None:
       self.name = name
@@ -94,11 +94,14 @@ class Spider(Log):
     else:
       self._downloadPageNum=self._downloadPageNum+1
     return True
-  def getUrl(self):
+  def popUrl(self):
     if(self.checkConcurrency()):
-      return self.url_store.getUrl()
+      return self.url_store.popUrl()
+    else:
+      print 'Downloads are too frequent'
     return None
-
+  def urlCount(self):
+    return self.url_store.getCount()
   def saveUrl(self, urls):
     self.url_store.saveUrl(urls)
 

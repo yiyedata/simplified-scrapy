@@ -2,15 +2,18 @@
 #coding=utf-8
 class UrlStore:
   _urls=[]
-  _i=0
+  # _i=0
   _dic=set()
-  def getUrl(self):
+  def popUrl(self):
     url=None
-    if(len(self._urls)>self._i):
-      url = self._urls[self._i]
-      self._i = self._i+1
+    # if(len(self._urls)>self._i):
+    #   url = self._urls[self._i]
+    #   self._i = self._i+1
+    if(len(self._urls)>0):
+      url=self._urls.pop()
     return url
-
+  def getCount(self):
+    return len(self._urls)
   def checkUrl(self,url):
     return url in self._dic
 
