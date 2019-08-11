@@ -28,10 +28,10 @@ def beforeRequest(self, request):
 def afterResponse(self, response, cookie, url):
 def downloadError(self,url,err=None):
 def saveObj(self, data):
-\#下面两个方法需要同时重写。如果重写了一个，另一个没有重写，可能会出错。
+#下面两个方法需要同时重写。如果重写了一个，另一个没有重写，可能会出错。
 def popHtml(self):
 def saveHtml(self,url,html):
-\#下面三个方法需要同时重写。如果重写了一个，其它的没有重写，可能会出错。
+#下面三个方法需要同时重写。如果重写了一个，其它的没有重写，可能会出错。
 def popUrl(self):
 def urlCount(self):
 def saveUrl(self, urls):
