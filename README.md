@@ -8,10 +8,10 @@ simplified scrapy, A Simple Web Crawle
 `python start.py`
 # Demo
 项目中有爬虫一个例子，在文件夹spiders下，文件名为demoSpider.py。自定义的爬虫类需要继承Spider类
-(```)
+```
 from core.spider import Spider 
 class DemoSpider(Spider):
-(```)
+```
 需要给爬虫定义一个名字，配置入口链接地址，与抽取数据用到的模型名称
 (```)
 name = 'demo-spider'
