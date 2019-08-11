@@ -37,7 +37,7 @@ def urlCount(self):
 def saveUrl(self, urls):
 ```
 # Setting
-自定义的爬虫需要在配置文件进行配置，配置后爬虫类才会生效。
+自定义的爬虫需要在配置文件（setting.py）进行配置，配置后爬虫类才会生效。
 ```
 SPIDERS=[
   {'file':'spiders.demoSpider','class':'DemoSpider'}
