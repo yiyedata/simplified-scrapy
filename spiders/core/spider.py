@@ -91,7 +91,7 @@ class Spider(Log):
         return False
       self._startCountTs=time.time()
       self._downloadPageNum=1
-    else:
+    elif self.url_store.getCount()>0:
       self._downloadPageNum=self._downloadPageNum+1
     return True
   def popUrl(self):
