@@ -100,7 +100,3 @@ class SimplifiedMain(Log):
         self.log(err,logging.ERROR)
     finally:
       self._concurrency-=1
-
-thrc = SimplifiedMain()
-thrc.setRunFlag(True)
-thrc.startThread()
