@@ -12,7 +12,7 @@ simplified scrapy, A Simple Web Crawle
 from core.spider import Spider 
 class DemoSpider(Spider):
 ```
-需要给爬虫定义一个名字，配置入口链接地址，与抽取数据用到的模型名称
+需要给爬虫定义一个名字，配置入口链接地址，与抽取数据用到的模型名称。下面是采集新浪健康资讯数据的一个例子。其中auto_main_2表示抽取相同2级域名的链接，auto_obj表示自动抽取页面中的资讯数据，包括标题、正文和时间。
 ```
 name = 'demo-spider'
 start_urls = ['http://health.sina.com.cn/']
