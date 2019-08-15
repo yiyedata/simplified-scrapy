@@ -18,5 +18,4 @@ class Log(object):
     Python logger too.
     """
     self.logger().log(level, message, **kw)
-    if(level==logging.DEBUG):
-      print message
+    print message
