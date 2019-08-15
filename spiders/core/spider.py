@@ -4,6 +4,7 @@ import json,re,logging,time,io,os,hashlib
 from log import Log
 from url_store import UrlStore
 from html_store import HtmlStore
+from obj_store import ObjStore
 class Spider(Log):
   name = None
   models = None
@@ -21,6 +22,8 @@ class Spider(Log):
     if not hasattr(self, 'html_store'):
       print 'init html_store------------------------'
       self.html_store = HtmlStore()
+    if not hasattr(self, "obj_store"):
+      self.obj_store = ObjStore()
 
     Log.__init__(self,self.name)
     self.url_store.saveUrl(self.start_urls)
@@ -76,11 +79,14 @@ class Spider(Log):
         if(obj.get("Urls")):
           self.saveUrl(obj)
         else:
-          self.saveObj(obj)
+          d = obj.get("Data")
+          if(d and len(d) > 0):
+            self.obj_store.saveObj(d[0])
 
-  def saveObj(self, data):
-    # print data
-    raise NotImplementedError('{}.parse callback is not defined'.format(self.__class__.__name__))
+  # def saveObj(self, data):
+  #   self.obj_store.saveObj(data)
+  #   # print data
+  #   raise NotImplementedError('{}.parse callback is not defined'.format(self.__class__.__name__))
 
   _downloadPageNum=0
   _startCountTs=time.time()
