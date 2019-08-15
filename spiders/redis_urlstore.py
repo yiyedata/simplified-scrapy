@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
 import core
-import redis,json
+import redis,json,hashlib
 class RedisUrlStore():
   _queueName = 'url_queue_python'
   _setName = 'url_set_python'
@@ -19,7 +19,8 @@ class RedisUrlStore():
     return r.llen(self._queueName)
   def checkUrl(self,url):
     r = redis.Redis(connection_pool=self.pool)
-    result = r.sadd(self._setName,url)
+    md5 = hashlib.md5(url).hexdigest()
+    result = r.sadd(self._setName, md5)
     return not result
   def saveUrl(self, urls):
     r = redis.Redis(connection_pool=self.pool)
