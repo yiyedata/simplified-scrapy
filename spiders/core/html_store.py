@@ -16,9 +16,7 @@ class HtmlStore:
       return self._htmls.pop()
 
   def _saveHtml(self,url,html):
-    filename = os.path.basename(url)
-    if(not filename):
-      filename = hashlib.md5(url).hexdigest()+'.htm'
+    filename = hashlib.md5(url).hexdigest()+'.htm'
     if(not os.path.exists(self._htmlPath)):
       os.mkdir(self._htmlPath)
     file = io.open(self._htmlPath+filename, "w",encoding="utf-8")
