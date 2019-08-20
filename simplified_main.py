@@ -76,12 +76,13 @@ class SimplifiedMain(Log):
           if(data):
             flag=True
             self._extracter.extract(data["url"],data["html"],ssp)
+            time.sleep(0.5)
         except Exception as err:
           self.log(err,logging.ERROR)
           time.sleep(10)
       if(not flag):
         time.sleep(3)
-      time.sleep(0.7)
+      time.sleep(1)
   def downloadThread(self,url,ssp):
     try:
       if(not url):
