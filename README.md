@@ -45,7 +45,7 @@ SPIDERS=[
 ```
 
 # UrlStore、HtmlStore
-可以重写UrlStore、HtmlStore中的方法，将url和html存储到redis、mongodb等数据库中。使用重写过的类，在爬虫类中实例化响应等变量
+可以重写UrlStore、HtmlStore中的方法，将url和html存储到redis、mongodb等数据库中。使用重写过的类，在爬虫类中实例化相应变量
 ```
 class DemoSpider(Spider):
   url_store = SelfUrlStore()
