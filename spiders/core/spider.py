@@ -23,6 +23,7 @@ class Spider(Log):
       print 'init html_store------------------------'
       self.html_store = HtmlStore()
     if not hasattr(self, "obj_store"):
+      print 'init obj_store------------------------'
       self.obj_store = ObjStore()
 
     Log.__init__(self,self.name)
