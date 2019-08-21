@@ -8,9 +8,9 @@ class DemoSpider(Spider):
   models = ['auto_main_2','auto_obj']
 
   # Storing URLs with redis, if you don't like this, please comment it out 
-  url_store = RedisUrlStore()
+  # url_store = RedisUrlStore()
   # Storing Objs with mongodb, if you don't like this, please comment it out 
-  obj_store = MongoObjStore()
+  # obj_store = MongoObjStore()
 
   def afterResponse(self, response, cookie, url):
     html = Spider.afterResponse(self,response,cookie,url)
