@@ -30,7 +30,7 @@ def requestPost(url, data, headers, useIp=False, ssp=None):
     response = opener.open(req)
     if(ssp):
       return ssp.afterResponse(response,url)
-    return _getResponseStr(response.read(),url)
+    return getResponseStr(response.read(),url)
   except Exception as err:
     logError(traceback.format_exc(),err,url)
     pass
@@ -38,7 +38,7 @@ def requestPost(url, data, headers, useIp=False, ssp=None):
     if response:
       response.close()
 
-def _getResponseStr(htmSource,url):
+def getResponseStr(htmSource,url):
   html=None
   if(htmSource):
     try:
@@ -79,7 +79,7 @@ def requestGet(url, headers, useIp, ssp=None):
     opener.addheaders = dic2tuple(header)
     response = opener.open(url)
     if(ssp): data = ssp.afterResponse(response,url)
-    else: data = _getResponseStr(response.read(),url)
+    else: data = getResponseStr(response.read(),url)
     return data
   except Exception as err:
     logError(traceback.format_exc(),err,url)
@@ -121,3 +121,5 @@ def test():
 # test()
 # model=['{"Type":2}','{"Type":3}']
 # print json.dumps(model)
+
+# print requestGet('http://health.sina.com.cn/d/2015-05-25/0931171699.shtml',None,None)
