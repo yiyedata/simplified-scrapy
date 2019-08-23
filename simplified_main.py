@@ -51,7 +51,7 @@ class SimplifiedMain(Log):
         return False
       self._startCountTs=time.time()
       self._downloadPageNum=0
-    if self._concurrency > CONCURRENCY:
+    if self._concurrency >= CONCURRENCY:
       self.log('name={}, count={}, concurrency={}, downloadPageNum={}, tmSpan={}, reason={}'.format(name,count,self._concurrency,self._downloadPageNum,tmSpan,'exceed the config number CONCURRENCY'))
       return False
     self._concurrency+=1
