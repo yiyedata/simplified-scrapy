@@ -64,7 +64,10 @@ class SimplifiedMain(Log):
     m = importlib.import_module(fileName,'spiders')
     cls = getattr(m, className)
     ssp = cls()
-    self._spiderDic[fileName]=ssp
+    if(not ssp.login()):
+      print className +': login failed'
+    else:
+      self._spiderDic[fileName]=ssp
     return ssp
 
   def extractThread(self):
