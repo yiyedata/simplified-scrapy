@@ -95,6 +95,8 @@ class Spider(Log):
           if(d and len(d) > 0):
             self.obj_store.saveObj(d[0])
   def extract(self, url,html,models,modelNames):
+    if(not modelNames):
+      print 'model not configured'
     return False
   # def saveObj(self, data):
   #   self.obj_store.saveObj(data)
