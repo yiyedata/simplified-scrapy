@@ -6,6 +6,7 @@ from url_store import UrlStore
 from html_store import HtmlStore
 from obj_store import ObjStore
 from cookie_store import CookieStore
+from request_helper import requestPost,requestGet,getResponseStr
 class Spider(Log):
   name = None
   models = None
@@ -29,10 +30,20 @@ class Spider(Log):
     if not hasattr(self, "cookie_store"):
       print 'init cookie_store------------------------'
       self.cookie_store = CookieStore()
+    if not hasattr(self, "login_data"):
+      self.login_data = None
 
     Log.__init__(self,self.name)
     self.url_store.saveUrl(self.start_urls)
-
+  def login(self, obj=None):
+    if(not obj): obj = self.login_data
+    if(obj and obj.get('url')):
+      data = obj.get('data')
+      if(not isinstance(data,str)): data = json.dumps(data)
+      return requestPost(obj.get('url'),data,
+        obj.get('headers'),obj.get('useProxy'),self)
+    else:
+      return True
   def getCookie(self,url):
     if(self.cookie_store):
       return self.cookie_store.getCookie(url)
@@ -47,18 +58,8 @@ class Spider(Log):
       request['header']['Cookie']=cookie
     return request
 
-  def _getResponseStr(self, htmSource, url):
-    html=None
-    try:
-      html=htmSource.decode("utf8")
-    except: #Exception as e:
-      try:
-        html=htmSource.decode("gb18030")
-      except Exception as err:
-        self.log('{},{}'.format(err,url),logging.ERROR)
-    return html
   def afterResponse(self, response, url):
-    html = self._getResponseStr(response.read(),url)
+    html = getResponseStr(response.read(),url)
     cookie = response.info().getheaders('Set-Cookie')
     self.setCookie(url,cookie)
     return html
@@ -93,7 +94,8 @@ class Spider(Log):
           d = obj.get("Data")
           if(d and len(d) > 0):
             self.obj_store.saveObj(d[0])
-
+  def extract(self, url,html,models,modelNames):
+    return False
   # def saveObj(self, data):
   #   self.obj_store.saveObj(data)
   #   # print data
