@@ -2,51 +2,42 @@
 #coding=utf-8
 
 import urllib  
-import urllib2,cookielib
+import urllib2
 import json
 import sys,socket,random,time,re
 import traceback
 import spider_resource
 from logPrint import logPrint,logError,getTime,saveFile
 # type = sys.getfilesystemencoding()
-def requestPost(url, data, headers, useIp=False,ssp=None):
-  htmSource = None
-  req = None
+def requestPost(url, data, headers, useIp=False, ssp=None):
   response = None
-  d=""
-  head={}
-  if data:
-    d=data
-  if headers:
-    head=headers
-  if(not head.get('User-Agent')):
-    head['User-Agent']=random.choice(spider_resource.useragent)
+  if headers: header = headers
+  else: header = {}
+  if(not header.get('User-Agent')):
+    header['User-Agent']=random.choice(spider_resource.useragent)
+
   try:
-    request = {
-      'header':head,
-      'url':url,
-      'proxy':None,
-      'data':d
-    }
+    request = { 'header':header, 'url':url, 'proxy':None, 'data':data }
     if(ssp):
       request = ssp.beforeRequest(request)
-      head = request['header']
+      header = request['header']
       url = request['url']
-      d = request['data']
-    if(useIp and request['proxy']):
-      _setProxy(request['proxy'])
+      data = request['data']
+    if(useIp and request['proxy']): opener = _setProxy(request['proxy'])
+    else: opener = urllib2.build_opener()
 
-    req = urllib2.Request(url, d, head)
-    response = urllib2.urlopen(req,timeout=10)
-    # cookie = response.info().getheaders('Set-Cookie')
-    htmSource = response.read()  
+    req = urllib2.Request(url, data, header)
+    response = opener.open(req)
+    if(ssp):
+      return ssp.afterResponse(response,url)
+    return _getResponseStr(response.read(),url)
   except Exception as err:
     logError(traceback.format_exc(),err,url)
     pass
   finally:
     if response:
       response.close()
-  return _getResponseStr(htmSource,url)
+
 def _getResponseStr(htmSource,url):
   html=None
   if(htmSource):
@@ -58,50 +49,42 @@ def _getResponseStr(htmSource,url):
       except Exception as err:
         logError(traceback.format_exc(),err,url)
   return html
+def setProxyGloab(proxy):
+  proxy_handler = urllib2.ProxyHandler({proxy['p']:proxy['ip']})
+  opener = urllib2.build_opener(proxy_handler)  
+  urllib2.install_opener(opener)  
 def _setProxy(proxy):
-  proxyip=proxy
-  # proxy_support = urllib2.ProxyHandler({'http':proxyip})
-  # # nullproxy_handler = urllib2.ProxyHandler({})
-  # opener = urllib2.build_opener(proxy_support,urllib2.HTTPHandler)
-  # urllib2.install_opener(opener)
-  print 'proxyip',proxyip
+  print 'proxyip',proxy
+  proxy_handler = urllib2.ProxyHandler({proxy['p']:proxy['ip']})
+  opener = urllib2.build_opener(proxy_handler)  
+  return opener
 def dic2tuple(dic):
   tp=[]
   for key in dic:
     tp.append((key,dic[key]))
   return tp
+
 def requestGet(url, headers, useIp, ssp=None):
-  response = None
-  head = {}
-  if headers:
-    head = headers
-  if(not head.get('User-Agent')):
-    head['User-Agent']=random.choice(spider_resource.useragent)
-  request = {
-    'header':head,
-    'url':url,
-    'proxy':None
-  }
-  request = ssp.beforeRequest(request)
-  head = request['header']
+  if headers: header = headers 
+  else: header = {}
+
+  if(not header.get('User-Agent')): header['User-Agent'] = random.choice(spider_resource.useragent)
+  request = { 'header':header, 'url':url, 'proxy':None }
+  if(ssp): request = ssp.beforeRequest(request)
+  header = request['header']
   url = request['url']
   try:
-    #url=url.decode("UTF-8").encode(type)
-    if(useIp and request['proxy']):
-      _setProxy(request['proxy'])
-    cookie = cookielib.CookieJar()
-    cookiehandler = urllib2.HTTPCookieProcessor(cookie)
-    opener = urllib2.build_opener(cookiehandler)
-    opener.addheaders = dic2tuple(head)
+    if(useIp and request['proxy']): opener = _setProxy(request['proxy'])
+    else: opener = urllib2.build_opener()
+    opener.addheaders = dic2tuple(header)
     response = opener.open(url)
-    data = ssp.afterResponse(response,cookie,url)
+    if(ssp): data = ssp.afterResponse(response,url)
+    else: data = _getResponseStr(response.read(),url)
     return data
-    # htmSource = response.read()
   except Exception as err:
     logError(traceback.format_exc(),err,url)
   finally:
-    if response:
-      response.close()
+    if response: response.close()
 
 def extractHtml(url,html,model,modelName,title=None):
   headers = { "Content-Type": "application/json" }
