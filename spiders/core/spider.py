@@ -5,6 +5,7 @@ from log import Log
 from url_store import UrlStore
 from html_store import HtmlStore
 from obj_store import ObjStore
+from cookie_store import CookieStore
 class Spider(Log):
   name = None
   models = None
@@ -25,16 +26,28 @@ class Spider(Log):
     if not hasattr(self, "obj_store"):
       print 'init obj_store------------------------'
       self.obj_store = ObjStore()
+    if not hasattr(self, "cookie_store"):
+      print 'init cookie_store------------------------'
+      self.cookie_store = CookieStore()
 
     Log.__init__(self,self.name)
     self.url_store.saveUrl(self.start_urls)
 
+  def getCookie(self,url):
+    if(self.cookie_store):
+      return self.cookie_store.getCookie(url)
+    return None
+  def setCookie(self,url,cookie):
+    if(self.cookie_store and cookie):#cookie 拼接，不同页面返回不同的cookie，不能覆盖
+      self.cookie_store.setCookie(url,cookie)
+
   def beforeRequest(self, request):
-    # request['proxy']=random.choice(spider_resource.proxyips)
-    # self.log(request)
+    cookie=self.getCookie(request['url'])
+    if(cookie):
+      request['header']['Cookie']=cookie
     return request
 
-  def _getResponseStr(self, htmSource,url):
+  def _getResponseStr(self, htmSource, url):
     html=None
     try:
       html=htmSource.decode("utf8")
@@ -44,15 +57,12 @@ class Spider(Log):
       except Exception as err:
         self.log('{},{}'.format(err,url),logging.ERROR)
     return html
-  def afterResponse(self, response, cookie, url):
+  def afterResponse(self, response, url):
     html = self._getResponseStr(response.read(),url)
-    data = {
-      "html" : html,
-      "header" : response.info().headers,
-      "cookie" : cookie,
-      "url" : url
-    }   
+    cookie = response.info().getheaders('Set-Cookie')
+    self.setCookie(url,cookie)
     return html
+
   def popHtml(self):
     return self.html_store.popHtml()
   def saveHtml(self,url,html):
