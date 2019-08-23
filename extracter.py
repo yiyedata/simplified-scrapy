@@ -36,8 +36,6 @@ class Extracter:
       if mds:
         data = extractHtml(url["url"],html,models,mds,url.get("title"))
         ssp.saveData(data)
-      else:
-        print 'model not configured'
 
 # print  os.path.abspath(os.curdir)+'/simplified-scrapy/models/'
 # print os.path.abspath('..')
