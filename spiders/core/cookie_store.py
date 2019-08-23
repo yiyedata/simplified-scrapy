@@ -49,7 +49,12 @@ class CookieStore:
     old=self._cookies.get(domain)
     if(old):
       self._parseCookie(old,kvs)
-    self._parseCookie(cookie,kvs)
+
+    if(isinstance(cookie,str)):
+      self._parseCookie(cookie,kvs)
+    else:
+      for line in cookie:
+        self._parseCookie(line,kvs)
     strCookie = self._dic2str(kvs)
     self._cookies[domain] = strCookie
     self._cookiefile.write(u'{},{}\n'.format(domain,strCookie))
