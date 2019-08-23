@@ -21,6 +21,7 @@ class LoginDemoSpider(Spider):
     print url,models,modelNames
     if(html):
       print json.loads(html)
+    return True
   def login(self):
     login_data={
       'url':'http://47.92.87.212:8080/yiye.mgt/api/pub/login',
