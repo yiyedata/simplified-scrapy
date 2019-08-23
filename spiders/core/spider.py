@@ -53,7 +53,7 @@ class Spider(Log):
       html=htmSource.decode("utf8")
     except: #Exception as e:
       try:
-        html=htmSource.decode("gbk")
+        html=htmSource.decode("gb18030")
       except Exception as err:
         self.log('{},{}'.format(err,url),logging.ERROR)
     return html
