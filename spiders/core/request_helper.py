@@ -45,7 +45,7 @@ def _getResponseStr(htmSource,url):
       html=htmSource.decode("utf8")
     except:
       try:
-        html=htmSource.decode("gbk")
+        html=htmSource.decode("gb18030")
       except Exception as err:
         logError(traceback.format_exc(),err,url)
   return html
