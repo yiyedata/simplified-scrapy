@@ -12,6 +12,6 @@ class DemoSpider(Spider):
   # Storing Objs with mongodb, if you don't like this, please comment it out 
   # obj_store = MongoObjStore()
 
-  def afterResponse(self, response, cookie, url):
-    html = Spider.afterResponse(self,response,cookie,url)
-    return Spider.removeScripts(self,html)
+  def afterResponse(self, response, url):
+    html = Spider.afterResponse(self, response, url)
+    return Spider.removeScripts(self, html)
