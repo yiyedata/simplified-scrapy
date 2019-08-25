@@ -39,9 +39,12 @@ class Spider(Log):
     if(not obj): obj = self.login_data
     if(obj and obj.get('url')):
       data = obj.get('data')
-      if(not isinstance(data,str)): data = json.dumps(data)
-      return requestPost(obj.get('url'),data,
-        obj.get('headers'),obj.get('useProxy'),self)
+      if(data and not isinstance(data,str)): data = json.dumps(data)
+      if(obj.get('method')=='get'):
+        return requestGet(obj.get('url'),obj.get('headers'),obj.get('useProxy'),self)
+      else:
+        return requestPost(obj.get('url'),data,
+          obj.get('headers'),obj.get('useProxy'),self)
     else:
       return True
   def getCookie(self,url):
