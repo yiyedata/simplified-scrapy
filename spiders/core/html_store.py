@@ -22,3 +22,6 @@ class HtmlStore:
     file = io.open(self._htmlPath+filename, "w",encoding="utf-8")
     file.write(html)
     file.close()
+
+  def updateState(self,url,state):
+    pass

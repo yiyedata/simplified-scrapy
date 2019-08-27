@@ -6,7 +6,7 @@ from url_store import UrlStore
 from html_store import HtmlStore
 from obj_store import ObjStore
 from cookie_store import CookieStore
-from request_helper import requestPost,requestGet,getResponseStr
+from request_helper import requestPost,requestGet,getResponseStr,extractHtml
 class Spider(Log):
   name = None
   models = None
@@ -20,7 +20,7 @@ class Spider(Log):
       self.start_urls = []
     if not hasattr(self, 'url_store'):
       print 'init url_store------------------------'
-      self.url_store = UrlStore()
+      self.url_store = UrlStore(self.name)
     if not hasattr(self, 'html_store'):
       print 'init html_store------------------------'
       self.html_store = HtmlStore()
@@ -72,7 +72,9 @@ class Spider(Log):
   def saveHtml(self,url,html):
     if(html):
       self.html_store.saveHtml(url,html)
-
+  def updateHtmlState(self,url,state):
+    self.html_store.updateState(url,state)
+    
   def removeScripts(self,html):
     html = re.compile('(?=<[\s]*script[^>]*>)[\s\S]*?(?:</script>)').sub('',html)
     html = re.compile('(?=<[\s]*style[^>]*>)[\s\S]*?(?:</style>)').sub('',html)
@@ -87,24 +89,23 @@ class Spider(Log):
     print url,err
 
   def saveData(self, data):
-    # print data
     if(data):
-      objs = json.loads(data)
+      if(type(data).__name__ == 'dict'): objs = data
+      else: objs = json.loads(data)
       for obj in objs:
         if(obj.get("Urls")):
-          self.saveUrl(obj)
+          self.saveUrl(obj.get("Urls"))
         else:
           d = obj.get("Data")
           if(d and len(d) > 0):
             self.obj_store.saveObj(d[0])
+
   def extract(self, url,html,models,modelNames):
     if(not modelNames):
       print 'model not configured'
-    return False
-  # def saveObj(self, data):
-  #   self.obj_store.saveObj(data)
-  #   # print data
-  #   raise NotImplementedError('{}.parse callback is not defined'.format(self.__class__.__name__))
+      return False
+    else:
+      return extractHtml(url["url"],html,models,modelNames,url.get("title"))
 
   _downloadPageNum=0
   _startCountTs=time.time()

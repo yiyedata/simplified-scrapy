@@ -6,12 +6,15 @@ class UrlStore:
   _urls=[]
   _i=0
   _dic=set()
-  _urlFilename = 'db/urls.yd'
-  _dicFilename = 'db/dic.yd'
-  _indexFilename = 'db/index.yd'
+  _urlFilename = 'db/{}-urls.yd'
+  _dicFilename = 'db/{}-dic.yd'
+  _indexFilename = 'db/{}-index.yd'
   _lock = Lock()
-  def __init__(self):
+  def __init__(self, name):
     try:
+      self._urlFilename=self._urlFilename.format(name)
+      self._dicFilename=self._dicFilename.format(name)
+      self._indexFilename=self._indexFilename.format(name)
       if(not os.path.exists('db/')):
         os.mkdir('db/')
       self._urlfile = io.open(self._urlFilename, "a+",encoding="utf-8")
@@ -65,8 +68,8 @@ class UrlStore:
     return md5 in self._dic
 
   def saveUrl(self, urls):
-    if (type(urls).__name__=='dict'):
-      urls=urls["Urls"]
+    # if (type(urls).__name__=='dict'):
+    #   urls=urls["Urls"]
     self._lock.acquire()
     try:
       flag=False

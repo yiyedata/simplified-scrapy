@@ -32,10 +32,8 @@ class Extracter:
     if(mds):
       for modelName in mds:
         models.append(self._models[modelName])
-    if(not ssp.extract(url,html,models,mds)):
-      if mds:
-        data = extractHtml(url["url"],html,models,mds,url.get("title"))
-        ssp.saveData(data)
+
+    return ssp.extract(url,html,models,mds)
 
 # print  os.path.abspath(os.curdir)+'/simplified-scrapy/models/'
 # print os.path.abspath('..')

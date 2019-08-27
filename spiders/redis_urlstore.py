@@ -1,16 +1,20 @@
 #!/usr/bin/python
 #coding=utf-8
-import core
-import redis,json,hashlib
+import redis,json,hashlib,random
 class RedisUrlStore():
-  _queueName = 'url_queue_python'
-  _setName = 'url_set_python'
-  def __init__(self):
+  _queueName = 'url_queue_'
+  _setName = 'url_set_'
+  def __init__(self,name):
     self.pool = redis.ConnectionPool(host='127.0.0.1', port=6379)
-    
+    self._queueName=self._queueName+name
+    self._setName=self._setName+name
   def popUrl(self):
     r = redis.Redis(connection_pool=self.pool)
-    url = r.lpop(self._queueName)
+    num = random.randint(0,9)
+    if(num<7):
+      url = r.lpop(self._queueName)
+    else:
+      url = r.rpop(self._queueName)
     if(url):
       return json.loads(url)
     return None
@@ -24,8 +28,8 @@ class RedisUrlStore():
     return not result
   def saveUrl(self, urls):
     r = redis.Redis(connection_pool=self.pool)
-    if (type(urls).__name__=='dict'):
-      urls=urls["Urls"]
+    # if (type(urls).__name__=='dict'):
+    #   urls=urls["Urls"]
     for url in urls:
       if(isinstance(url,str)):
         url={'url':url}

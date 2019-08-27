@@ -77,8 +77,10 @@ class SimplifiedMain(Log):
         try:
           data = ssp.popHtml()
           if(data):
-            flag=True
-            self._extracter.extract(data["url"],data["html"],ssp)
+            flag = True
+            obj = self._extracter.extract(data["url"],data["html"],ssp)
+            ssp.updateHtmlState(data["url"],1)
+            if obj: ssp.saveData(obj)
             time.sleep(0.5)
         except Exception as err:
           self.log(err,logging.ERROR)
