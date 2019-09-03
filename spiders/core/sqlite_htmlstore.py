@@ -9,6 +9,10 @@ class SqliteHtmlStore:
   _tbName='htmls'
   def __init__(self, name):
     self._htmlPath = self._htmlPath.format(name)
+    if(not os.path.exists('htmls/')):
+      os.mkdir('htmls/')
+    if(not os.path.exists(self._htmlPath)):
+      os.mkdir(self._htmlPath)
     self._dbPath = self._dbPath.format(name)
     conn = sqlite3.connect(self._dbPath)
     c = conn.cursor()
