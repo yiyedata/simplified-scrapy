@@ -23,10 +23,10 @@ class Spider(Log):
       self.url_store = UrlStore(self.name)
     if not hasattr(self, 'html_store'):
       print 'init html_store------------------------'
-      self.html_store = HtmlStore()
+      self.html_store = HtmlStore(self.name)
     if not hasattr(self, "obj_store"):
       print 'init obj_store------------------------'
-      self.obj_store = ObjStore()
+      self.obj_store = ObjStore(self.name)
     if not hasattr(self, "cookie_store"):
       print 'init cookie_store------------------------'
       self.cookie_store = CookieStore()
@@ -72,8 +72,8 @@ class Spider(Log):
   def saveHtml(self,url,html):
     if(html):
       self.html_store.saveHtml(url,html)
-  def updateHtmlState(self,url,state):
-    self.html_store.updateState(url,state)
+  def updateHtmlState(self,id,state):
+    self.html_store.updateState(id,state)
     
   def removeScripts(self,html):
     html = re.compile('(?=<[\s]*script[^>]*>)[\s\S]*?(?:</script>)').sub('',html)
@@ -88,13 +88,23 @@ class Spider(Log):
   def downloadError(self,url,err=None):
     print url,err
 
+  def urlFilter(self, url):
+    return True
+  def _urlFilter(self, urls):
+    tmp=[]
+    for url in urls:
+      u = url['url']
+      if u and self.urlFilter(u):
+        tmp.append(url)
+    return tmp
+
   def saveData(self, data):
     if(data):
       if(type(data).__name__ == 'dict'): objs = data
       else: objs = json.loads(data)
       for obj in objs:
         if(obj.get("Urls")):
-          self.saveUrl(obj.get("Urls"))
+          self.saveUrl(self._urlFilter(obj.get("Urls")))
         else:
           d = obj.get("Data")
           if(d and len(d) > 0):

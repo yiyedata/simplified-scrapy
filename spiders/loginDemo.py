@@ -1,18 +1,18 @@
 import json
 from core.spider import Spider 
-from redis_urlstore import RedisUrlStore
-from mongo_objstore import MongoObjStore
+from core.redis_urlstore import RedisUrlStore
+from core.mongo_objstore import MongoObjStore
 class LoginDemoSpider(Spider):
   # concurrencyPer1s=2
-  name = 'demo-spider'
+  name = 'login-spider'
   start_urls = [{'url':'http://47.92.87.212:8080/yiye.mgt/api/push/list',
     'requestMethod':'post',
     'postData':'{"index":1,"tbName":"biaoshu","keyword":"","count":10}'}]
 
   # Storing URLs with redis, if you don't like this, please comment it out 
-  # url_store = RedisUrlStore()
+  # url_store = RedisUrlStore(name)
   # Storing Objs with mongodb, if you don't like this, please comment it out 
-  # obj_store = MongoObjStore()
+  # obj_store = MongoObjStore(name)
 
   def afterResponse(self, response, url):
     html = Spider.afterResponse(self, response, url)

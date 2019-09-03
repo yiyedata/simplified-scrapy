@@ -3,7 +3,9 @@
 import os,io,hashlib
 class HtmlStore:
   _htmls=[]
-  _htmlPath='htmls/'
+  _htmlPath='htmls/{}/'
+  def __init__(self, name):
+    self._htmlPath=self._htmlPath.format(name)
   def saveHtml(self,url,html):
     self._htmls.append({"url":url,"html":html})
     if(isinstance(url,str)):
@@ -23,5 +25,5 @@ class HtmlStore:
     file.write(html)
     file.close()
 
-  def updateState(self,url,state):
+  def updateState(self,id,state):
     pass

@@ -79,7 +79,7 @@ class SimplifiedMain(Log):
           if(data):
             flag = True
             obj = self._extracter.extract(data["url"],data["html"],ssp)
-            ssp.updateHtmlState(data["url"],1)
+            ssp.updateHtmlState(data["id"],1)
             if obj: ssp.saveData(obj)
             time.sleep(0.5)
         except Exception as err:
