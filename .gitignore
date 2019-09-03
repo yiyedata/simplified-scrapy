@@ -4,3 +4,4 @@ obj.json
 *.log
 .DS_Store
 db/*
+data/*
