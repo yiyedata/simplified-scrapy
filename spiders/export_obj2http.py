@@ -8,7 +8,7 @@ class MongoObjStore:
   _dbName='python_db'
   _tbName='obj_'
   
-  _appSecret = "1234567890"
+  _appSecret = "123456789"
   _appId = 'python-export'
   _url = "http://47.92.87.212:8080/yiye.mgt/api/client"
   # _key='yiyedata_test'
@@ -23,14 +23,19 @@ class MongoObjStore:
       db = self._connect()
       while True:
         objs = db[self._tbName].find({"state":{ "$exists": False }})
-        for obj in objs:
-          try:
-            id = obj["_id"]
-            result = self._exportObj(obj)
-            db[self._tbName].update({"_id": id}, {"$set": {"state": result}})
-            time.sleep(0.3)
-          except Exception as err:
-            print err
+        if not objs:
+          objs = db[self._tbName].find({"state":-2})
+        if objs:
+          for obj in objs:
+            try:
+              id = obj["_id"]
+              result = self._exportObj(obj)
+              db[self._tbName].update({"_id": id}, {"$set": {"state": result}})
+              time.sleep(0.3)
+            except Exception as err:
+              print err
+        else:
+          time.sleep(100)
         time.sleep(5)
 
   def _exportObj(self,data):
