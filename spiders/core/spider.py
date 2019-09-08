@@ -1,13 +1,15 @@
 #!/usr/bin/python
 #coding=utf-8
 import json,re,logging,time,io,os,hashlib
-from log import Log
-from url_store import UrlStore
-from html_store import HtmlStore
+from utils import printInfo
+# from url_store import UrlStore
+# from html_store import HtmlStore
+from sqlite_urlstore import SqliteUrlStore
+from sqlite_htmlstore import SqliteHtmlStore
 from obj_store import ObjStore
 from cookie_store import CookieStore
 from request_helper import requestPost,requestGet,getResponseStr,extractHtml
-class Spider(Log):
+class Spider():
   name = None
   models = None
   concurrencyPer1s=1
@@ -20,10 +22,10 @@ class Spider(Log):
       self.start_urls = []
     if not hasattr(self, 'url_store'):
       print 'init url_store------------------------'
-      self.url_store = UrlStore(self.name)
+      self.url_store = SqliteUrlStore(self.name)
     if not hasattr(self, 'html_store'):
       print 'init html_store------------------------'
-      self.html_store = HtmlStore(self.name)
+      self.html_store = SqliteHtmlStore(self.name)
     if not hasattr(self, "obj_store"):
       print 'init obj_store------------------------'
       self.obj_store = ObjStore(self.name)
@@ -32,9 +34,13 @@ class Spider(Log):
       self.cookie_store = CookieStore()
     if not hasattr(self, "login_data"):
       self.login_data = None
-
-    Log.__init__(self,self.name)
     self.url_store.saveUrl(self.start_urls)
+  
+  def log(self, msg, level=logging.DEBUG):
+    printInfo(msg)
+    logger = logging.getLogger()
+    logging.LoggerAdapter(logger, None).log(level, msg)
+    
   def login(self, obj=None):
     if(not obj): obj = self.login_data
     if(obj and obj.get('url')):
@@ -76,14 +82,14 @@ class Spider(Log):
     self.html_store.updateState(id,state)
     
   def removeScripts(self,html):
-    html = re.compile('(?=<[\s]*script[^>]*>)[\s\S]*?(?:</script>)').sub('',html)
-    html = re.compile('(?=<[\s]*style[^>]*>)[\s\S]*?(?:</style>)').sub('',html)
-    html = re.compile('(?=<!--)[\s\S]*?(?:-->)').sub('',html)
-    html = re.compile('(?=<[\s]*link )[\s\S]*?(?:>)').sub('',html)
-    html = re.compile('(?=<[\s]*meta )[\s\S]*?(?:>)').sub('',html)
-    html = re.compile('(?=<[\s]*object[^>]*>)[\s\S]*?(?:</object>)').sub('',html)
+    html = re.compile('<[\s]*script[^>]*>[\s\S]*?</script>').sub('',html)
+    html = re.compile('<[\s]*style[^>]*>[\s\S]*?</style>').sub('',html)
+    html = re.compile('<!--[\s\S]*?-->').sub('',html)
+    html = re.compile('<[\s]*link [\s\S]*?>').sub('',html)
+    html = re.compile('<[\s]*meta [\s\S]*?>').sub('',html)
+    html = re.compile('<[\s]*object[^>]*>[\s\S]*?</object>').sub('',html)
     html = re.compile('</object>').sub('',html)
-    html = re.compile('(?=<param )[\s\S]*?(?:/>)').sub('',html)
+    html = re.compile('<param [\s\S]*?/>').sub('',html)
     return html
   def downloadError(self,url,err=None):
     print url,err

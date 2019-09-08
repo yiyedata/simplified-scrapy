@@ -5,10 +5,17 @@ import urllib
 import urllib2
 import json
 import sys,socket,random,time,re
-import traceback
+import traceback,logging
 import spider_resource
-from logPrint import logPrint,logError,getTime,saveFile
+from utils import printInfo,getTime,saveFile
 # type = sys.getfilesystemencoding()
+
+def log(err,data):
+  printInfo(err,data)
+  logger = logging.getLogger()
+  logging.LoggerAdapter(logger, None).log(logging.ERROR, err)
+  logging.LoggerAdapter(logger, None).log(logging.ERROR, data)
+
 def requestPost(url, data, headers, useIp=False, ssp=None):
   response = None
   if headers: header = headers
@@ -32,7 +39,7 @@ def requestPost(url, data, headers, useIp=False, ssp=None):
       return ssp.afterResponse(response,url)
     return getResponseStr(response.read(),url)
   except Exception as err:
-    logError(traceback.format_exc(),err,url)
+    log(err,url)
     pass
   finally:
     if response:
@@ -42,12 +49,13 @@ def getResponseStr(htmSource,url):
   html=None
   if(htmSource):
     try:
-      html=htmSource.decode("utf8")
+      html=htmSource.decode("utf-8")
     except:
       try:
         html=htmSource.decode("gb18030")
       except Exception as err:
-        logError(traceback.format_exc(),err,url)
+        # html=htmSource
+        log(err,url)
   return html
 def setProxyGloab(proxy):
   proxy_handler = urllib2.ProxyHandler({proxy['p']:proxy['ip']})
@@ -82,7 +90,7 @@ def requestGet(url, headers, useIp, ssp=None):
     else: data = getResponseStr(response.read(),url)
     return data
   except Exception as err:
-    logError(traceback.format_exc(),err,url)
+    log(err,url)
   finally:
     if response: response.close()
 

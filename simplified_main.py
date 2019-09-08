@@ -1,18 +1,27 @@
 #!/usr/bin/python
 #coding=utf-8
 import threading,traceback,time,importlib,imp,os,logging
-from spiders.core.log import Log
+from spiders.core.utils import printInfo
 from downloader import execDownload
 from extracter import Extracter
 from setting import SPIDERS,CONCURRENCY,CONCURRENCYPER1S
-class SimplifiedMain(Log):
+
+class SimplifiedMain():
   def __init__(self):
-    Log.__init__(self,'simplified-main')
     for spider in SPIDERS:
       try:
         self.getSpider(spider['file'],spider["class"])
       except Exception as err:
         self.log(err,logging.ERROR)
+
+  def log(self, msg, level=logging.DEBUG):
+    if (isinstance(msg,UnicodeEncodeError)):
+      print msg
+      return
+    printInfo(msg)
+    if(level==logging.ERROR):
+      logger = logging.getLogger()
+      logging.LoggerAdapter(logger, None).log(level, msg)
 
   _runflag = False
   def setRunFlag(self, flag):
@@ -28,7 +37,9 @@ class SimplifiedMain(Log):
         for ssp in self._spiderDic.values():
           if(self.checkConcurrency(ssp.name,ssp.urlCount())):
             url = ssp.popUrl()
-            if(url):
+            # test
+            if(url and url['url'][-4:]!='.jpg' and url['url'][-5:]!='.jpeg' and url['url'][-4:]!='.png'
+            and url['url'][-4:]!='.rar' and url['url'][-4:]!='.zip' and url['url'][-4:]!='.pdf'):
               thread = threading.Thread(target=self.downloadThread, args=(url,ssp))
               thread.start()
             else:

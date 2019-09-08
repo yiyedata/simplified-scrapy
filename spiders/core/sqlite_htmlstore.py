@@ -2,6 +2,7 @@
 #coding=utf-8
 import os,io,hashlib,json,time
 import sqlite3
+from utils import getTimeNow
 class SqliteHtmlStore:
   # _htmls=[]
   _htmlPath='htmls/{}/'
@@ -26,15 +27,14 @@ class SqliteHtmlStore:
   
   # def __del__(self):
   #   if self._conn: self._conn.close()
-  def _getTime(self,t):
-    return time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(t))
+
   def saveHtml(self,url,html):
     if(isinstance(url,str)):
       url={"url":url}
     filename = self._saveHtml(url["url"],html)
     # self._htmls.append({"url":url,"html":html})
     conn = sqlite3.connect(self._dbPath)
-    conn.cursor().execute("INSERT INTO htmls (json,state,tm) VALUES (?,?,?)",(json.dumps({"url":url,"html":filename}),0, self._getTime(time.time())))
+    conn.cursor().execute("INSERT INTO htmls (json,state,tm) VALUES (?,?,?)",(json.dumps({"url":url,"html":filename}),0, getTimeNow()))
     conn.commit() 
     conn.close()
 
@@ -46,7 +46,7 @@ class SqliteHtmlStore:
     for row in cursor:
       obj=json.loads(row[1])
       obj['id']=row[0]
-      obj['html']=io.open(self._htmlPath+obj['html'], "r",encoding="utf-8").read()
+      obj['html']=io.open(self._htmlPath+obj['html'], "r",encoding="utf-8").read()#.encode("utf-8")
       return obj
     conn.close()
 
