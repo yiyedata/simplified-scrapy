@@ -1,15 +1,18 @@
-#!/usr/bin/python
 #coding=utf-8
-import time
+import time,json
 from pymongo import MongoClient
 from core.request_helper import requestPost
 class MongoObjStore:
-  _host='127.0.0.1'
+  _host='192.168.31.202'
   _port=27017
   _dbName='python_db'
   _tbName='obj_'
-  _url='127.0.0.1/api'
-  _key='yiyedata_test'
+  
+  _appSecret = "1234567890"
+  _appId = 'python-export'
+  _url = "http://47.92.87.212:8080/yiye.mgt/api/client"
+  # _key='yiyedata_test'
+    
   def __init__(self, name):
     self._tbName = self._tbName + name
   def _connect(self):
@@ -22,16 +25,29 @@ class MongoObjStore:
         objs = db[self._tbName].find({"state":{ "$exists": False }})
         for obj in objs:
           try:
-            self._exportObj(obj)
-            db[self._tbName].update({"_id": obj["_id"]}, {"$set": {"state": 1}})
+            id = obj["_id"]
+            result = self._exportObj(obj)
+            db[self._tbName].update({"_id": id}, {"$set": {"state": result}})
             time.sleep(0.3)
           except Exception as err:
             print err
         time.sleep(5)
 
   def _exportObj(self,data):
+    if(data["Datas"][0]["Value"][-1:]=="。"):
+      return
     print data["_id"]
-    requestPost(self._url, {'key':self._key, 'data':data},{ "Content-Type": "application/json"})
+    del data["_id"]
+    data["Time"]= time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    body = {"id":self._appId, "appSecret":self._appSecret, 'objs':[data], 
+    "type":"objs", "tbName":"objDefault", "mongoDb":"mongodb://127.0.0.1:3317;MeishiDb"}
+ 
+    result = requestPost(self._url, json.dumps(body),{ "Content-Type": "application/json"})
+    if(result):
+      obj = json.loads(result)
+      return obj.get('code')
+    print result
+    return -2
 
-test = MongoObjStore('tb')
+test = MongoObjStore('meishi-test-spider')
 test.exportObj()
