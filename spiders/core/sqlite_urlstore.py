@@ -1,6 +1,5 @@
 #!/usr/bin/python
 #coding=utf-8
-from pymongo import MongoClient
 import json,hashlib,random,sqlite3,logging
 from utils import getTimeNow,printInfo
 class SqliteUrlStore():
