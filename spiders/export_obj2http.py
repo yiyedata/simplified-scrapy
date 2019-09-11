@@ -43,7 +43,8 @@ class MongoObjStore:
       return
     print data["_id"]
     del data["_id"]
-    del data["Json"]
+    if "Json" in data:
+      del data["Json"]
     data["Time"]= time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     body = {"id":self._appId, "appSecret":self._appSecret, 'objs':[data], 
     "type":"objs", "tbName":"objDefault", "mongoDb":"mongodb://127.0.0.1:3317;MeishiDb"}
