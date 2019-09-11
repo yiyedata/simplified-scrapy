@@ -16,7 +16,7 @@ def log(err,data):
   logging.LoggerAdapter(logger, None).log(logging.ERROR, err)
   logging.LoggerAdapter(logger, None).log(logging.ERROR, data)
 
-def requestPost(url, data, headers, useIp=False, ssp=None):
+def requestPost(url, data, headers, useIp=False, ssp=None,timeout=15):
   response = None
   if headers: header = headers
   else: header = {}
@@ -34,13 +34,12 @@ def requestPost(url, data, headers, useIp=False, ssp=None):
     else: opener = urllib2.build_opener()
 
     req = urllib2.Request(url, data, header)
-    response = opener.open(req)
+    response = opener.open(req,None,timeout)
     if(ssp):
       return ssp.afterResponse(response,url)
     return getResponseStr(response.read(),url)
   except Exception as err:
     log(err,url)
-    pass
   finally:
     if response:
       response.close()
@@ -54,7 +53,6 @@ def getResponseStr(htmSource,url):
       try:
         html=htmSource.decode("gb18030")
       except Exception as err:
-        # html=htmSource
         log(err,url)
   return html
 def setProxyGloab(proxy):
@@ -72,7 +70,7 @@ def dic2tuple(dic):
     tp.append((key,dic[key]))
   return tp
 
-def requestGet(url, headers, useIp, ssp=None):
+def requestGet(url, headers, useIp, ssp=None,timeout=10):
   if headers: header = headers 
   else: header = {}
 
@@ -85,7 +83,7 @@ def requestGet(url, headers, useIp, ssp=None):
     if(useIp and request['proxy']): opener = _setProxy(request['proxy'])
     else: opener = urllib2.build_opener()
     opener.addheaders = dic2tuple(header)
-    response = opener.open(url)
+    response = opener.open(url,None,timeout)
     if(ssp): data = ssp.afterResponse(response,url)
     else: data = getResponseStr(response.read(),url)
     return data

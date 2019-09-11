@@ -96,3 +96,22 @@ class UrlStore:
   def _writeFile(self, url, md5):
     self._dicfile.write(u'{}\n'.format(md5))
     self._urlfile.write(u'{}\n'.format(json.dumps(url)))
+  
+  def resetUrls(self, urls):
+    self._lock.acquire()
+    try:
+      flag=False
+      for url in urls:
+        if(isinstance(url,str)):
+          url={'url':url}
+        md5=hashlib.md5(url['url']).hexdigest()
+        self._urls.append(url)
+        self._dic.add(md5)
+        self._writeFile(url,md5)
+        flag=True
+      if(flag):
+        self._flushFile()
+    except Exception as err:
+      print err
+    finally:
+      self._lock.release()

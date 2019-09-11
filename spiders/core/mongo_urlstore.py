@@ -53,3 +53,17 @@ class MongoUrlStore():
       if(not self.checkUrl(url["url"])):
         db[self._tbName].insert(url)
         
+  def resetUrls(self, urls):
+    db = self._connect()
+    for url in urls:
+      if(isinstance(url,str)):
+        id = hashlib.md5(url).hexdigest()
+        url={'url':url,'_id':id, 'state':0}
+      else:
+        id = hashlib.md5(url["url"]).hexdigest()
+        url['_id']=id
+        url['state']=0
+      if(not self.checkUrl(url["url"])):
+        db[self._tbName].insert(url)
+      else:
+        db[self._tbName].update({"_id": url["_id"]}, {"$set": {"state": 0}})

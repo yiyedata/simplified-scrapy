@@ -46,4 +46,9 @@ class RedisUrlStore():
         url={'url':url}
       if(not self.checkUrl(url["url"])):
         r.rpush(self._queueName,json.dumps(url))
-        
+  def resetUrls(self, urls):
+    r = redis.Redis(connection_pool=self.pool)
+    for url in urls:
+      if(isinstance(url,str)):
+        url={'url':url}
+      r.rpush(self._queueName,json.dumps(url))

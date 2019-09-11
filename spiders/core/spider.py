@@ -94,6 +94,18 @@ class Spider():
   def downloadError(self,url,err=None):
     print url,err
 
+  def isPageUrl(self, url):
+    if(not url): 
+      return False
+    if("html.htm.jsp.asp.php".find(url[-4:].lower())>=0):
+      return True
+    
+    if('.jpg.png.gif.bmp.rar.zip.pdf.doc.xls.ppt.exe.avi.mp4'.find(url[-4:].lower())>=0
+        or '.jpeg.xlsx.pptx.docx'.find(url[-5:].lower())>0 
+        or '.rm'.find(url[-3:].lower())>=0):
+      return False
+    return True
+
   def urlFilter(self, url):
     return True
   def _urlFilter(self, urls):
@@ -137,7 +149,11 @@ class Spider():
     return True
   def popUrl(self):
     if(self.checkConcurrency()):
-      return self.url_store.popUrl()
+      url = self.url_store.popUrl()
+      #暂时加进来，运行一段时间后去掉
+      if(url and self.urlFilter(url['url'])):
+        return url
+      return None
     else:
       print 'Downloads are too frequent'
     return None
@@ -146,3 +162,25 @@ class Spider():
   def saveUrl(self, urls):
     self.url_store.saveUrl(urls)
 
+  def plan(self):
+    return []
+
+  _lastResetTime=None
+  def resetUrls(self,plan):
+    if(plan and len(plan)>0):
+      for p in plan:
+        now = time.localtime()
+        hour = now[3]
+        minute = now[4]
+        if(p.get('hour')):
+          hour = p.get('hour')
+        if(p.get('minute')):
+          minute = p.get('minute')
+        planTime = time.strptime(u"{}-{}-{} {}:{}".format(now[0],now[1],now[2],hour,minute), "%Y-%m-%d %H:%M")
+        if(now > planTime and (not self._lastResetTime or self._lastResetTime<planTime)):
+          self._lastResetTime = planTime
+          self.url_store.resetUrls(self.start_urls)
+          return
+
+
+    

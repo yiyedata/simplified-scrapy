@@ -35,15 +35,17 @@ class SimplifiedMain():
     while self._runflag:
       try:
         for ssp in self._spiderDic.values():
-          if(self.checkConcurrency(ssp.name,ssp.urlCount())):
+          urlCount = ssp.urlCount()
+          if(self.checkConcurrency(ssp.name,urlCount)):
             url = ssp.popUrl()
-            # test
-            if(url and url['url'][-4:]!='.jpg' and url['url'][-5:]!='.jpeg' and url['url'][-4:]!='.png'
-            and url['url'][-4:]!='.rar' and url['url'][-4:]!='.zip' and url['url'][-4:]!='.pdf'):
+            if(url):
               thread = threading.Thread(target=self.downloadThread, args=(url,ssp))
               thread.start()
             else:
               self._concurrency-=1
+          if(urlCount==0):
+            plan = ssp.plan()
+            ssp.resetUrls(plan)
       except Exception as err:
         self.log(err,logging.ERROR)
         time.sleep(10)

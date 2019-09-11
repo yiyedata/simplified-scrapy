@@ -87,3 +87,23 @@ class SqliteUrlStore():
     except Exception as err:
       self.log(err)
     conn.close()
+
+  def resetUrls(self, urls):
+    datas=[]
+    for url in urls:
+      if(isinstance(url,str)):
+        id = hashlib.md5(url).hexdigest()
+        url={'url':url}
+      else:
+        id = hashlib.md5(url["url"]).hexdigest()
+      datas.append((id,json.dumps(url),getTimeNow()))
+    if not len(datas): return
+    conn = sqlite3.connect(self._dbPath)
+    try:
+      cursor = conn.cursor()
+      # tmp = tuple(datas)
+      cursor.executemany("REPLACE into urls(id,json,state,tm) values(?,?,0,?)",tuple(datas))
+      conn.commit()
+    except Exception as err:
+      self.log(err)
+    conn.close()
