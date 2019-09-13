@@ -2,6 +2,7 @@
 import time,json
 from pymongo import MongoClient
 from core.request_helper import requestPost
+from core.utils import getTimeNow
 class MongoObjStore:
   _host='192.168.31.202'
   _port=27017
@@ -22,26 +23,31 @@ class MongoObjStore:
   def exportObj(self):
       db = self._connect()
       while True:
-        objs = db[self._tbName].find({"state":{ "$exists": False }})
-        if not objs:
-          objs = db[self._tbName].find({"state":-2})
-        if objs:
-          for obj in objs:
-            try:
-              id = obj["_id"]
-              result = self._exportObj(obj)
-              db[self._tbName].update({"_id": id}, {"$set": {"state": result}})
-              time.sleep(0.3)
-            except Exception as err:
-              print err
-        else:
-          time.sleep(100)
-        time.sleep(5)
+        try:
+          objs = db[self._tbName].find({"state":{ "$exists": False }})
+          if not objs:
+            objs = db[self._tbName].find({"state":-2})
+          if objs:
+            for obj in objs:
+              try:
+                id = obj["_id"]
+                result = self._exportObj(obj)
+                db[self._tbName].update({"_id": id}, {"$set": {"state": result}})
+                time.sleep(0.3)
+              except Exception as err:
+                print err
+          else:
+            time.sleep(10)
+          time.sleep(5)
+        except Exception as err:
+          print err
+          time.sleep(10)
+          db = self._connect()
 
   def _exportObj(self,data):
     if(data["Datas"][0]["Value"][-1:]==u"。"):
       return
-    print data["_id"]
+    print data["_id"],getTimeNow()
     del data["_id"]
     data["Time"]= time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     body = {"id":self._appId, "appSecret":self._appSecret, 'objs':[data], 
