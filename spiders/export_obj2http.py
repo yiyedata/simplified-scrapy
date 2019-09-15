@@ -40,7 +40,7 @@ class MongoObjStore:
             time.sleep(10)
           time.sleep(5)
         except Exception as err:
-          print err
+          print err,getTimeNow()
           time.sleep(10)
           db = self._connect()
 
