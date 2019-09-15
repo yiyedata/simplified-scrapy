@@ -101,7 +101,7 @@ class Spider():
       return True
     
     if('.jpg.png.gif.bmp.rar.zip.pdf.doc.xls.ppt.exe.avi.mp4'.find(url[-4:].lower())>=0
-        or '.jpeg.xlsx.pptx.docx'.find(url[-5:].lower())>0 
+        or '.jpeg.xlsx.pptx.docx'.find(url[-5:].lower())>=0 
         or '.rm'.find(url[-3:].lower())>=0):
       return False
     return True
