@@ -16,8 +16,8 @@ class SqliteUrlStore():
     try:
       c = conn.cursor()
       c.execute('''CREATE TABLE IF NOT EXISTS urls
-            (id TEXT  NOT NULL,
-            json  TEXT  NOT NULL,
+            (id TEXT PRIMARY KEY NOT NULL,
+            json TEXT NOT NULL,
             state INT NOT NULL DEFAULT 0,
             tm  TEXT);''')
       conn.commit()
@@ -67,7 +67,7 @@ class SqliteUrlStore():
     conn.close()
     return flag
 
-  def saveUrl(self, urls):
+  def saveUrl(self, urls,i=None):
     datas=[]
     for url in urls:
       if(isinstance(url,str)):

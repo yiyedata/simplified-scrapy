@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
 import time,io
+from urlparse import urlparse
 def getTime(t):
   return time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(t))
 def getTimeNow():
@@ -28,3 +29,11 @@ def appendFile(name,text):
   except Exception as err:
     printInfo(err,name)
   file.close()
+
+def convert2Int(url,count=10):
+  value = urlparse(url).netloc
+  value = value.split(":")[0]
+  myint=0
+  for c in value:
+    myint += ord(c)
+  return myint % count

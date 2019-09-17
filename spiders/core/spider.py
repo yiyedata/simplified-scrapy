@@ -9,6 +9,8 @@ from sqlite_htmlstore import SqliteHtmlStore
 from obj_store import ObjStore
 from cookie_store import CookieStore
 from request_helper import requestPost,requestGet,getResponseStr,extractHtml
+from config_helper import Configs
+from regex_helper import *
 class Spider():
   name = None
   models = None
@@ -34,8 +36,15 @@ class Spider():
       self.cookie_store = CookieStore()
     if not hasattr(self, "login_data"):
       self.login_data = None
-    self.url_store.saveUrl(self.start_urls)
-  
+    self.url_store.saveUrl(self.start_urls,0)
+    self.listA=listA
+    self.getElementAttrByID=getElementAttrByID
+    self.getElementsByTag=getElementsByTag
+    self.getElementByID=getElementByID
+    self.getElementsByClass=getElementsByClass
+    self.getElementTextByID=getElementTextByID
+    # for m in ["listA","getElementsByTag","getElementByID","getElementsByClass","getElementTextByID","getElementAttrByID"]:
+     
   def log(self, msg, level=logging.DEBUG):
     printInfo(msg)
     logger = logging.getLogger()
@@ -165,7 +174,6 @@ class Spider():
   def plan(self):
     return []
 
-  _lastResetTime=None
   def resetUrls(self,plan):
     if(plan and len(plan)>0):
       for p in plan:
@@ -177,8 +185,10 @@ class Spider():
         if(p.get('minute')):
           minute = p.get('minute')
         planTime = time.strptime(u"{}-{}-{} {}:{}".format(now[0],now[1],now[2],hour,minute), "%Y-%m-%d %H:%M")
-        if(now > planTime and (not self._lastResetTime or self._lastResetTime<planTime)):
-          self._lastResetTime = planTime
+        configKey = u"{}_plan".format(self.name)
+        _lastResetTime=Configs.getInt(configKey)
+        if(now > planTime and (not _lastResetTime or _lastResetTime<planTime)):
+          Configs.setValue(configKey, planTime)
           self.url_store.resetUrls(self.start_urls)
           return
 

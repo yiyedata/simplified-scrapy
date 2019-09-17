@@ -67,7 +67,7 @@ class UrlStore:
     md5=hashlib.md5(url).hexdigest()
     return md5 in self._dic
 
-  def saveUrl(self, urls):
+  def saveUrl(self, urls,i=None):
     # if (type(urls).__name__=='dict'):
     #   urls=urls["Urls"]
     self._lock.acquire()

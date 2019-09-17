@@ -34,6 +34,10 @@ class SimplifiedMain():
     threadExtract.start()
     while self._runflag:
       try:
+        if(os.path.exists('stop.txt')):
+          self._runflag = False
+          os.rename('stop.txt','stoped.txt')
+          break
         for ssp in self._spiderDic.values():
           urlCount = ssp.urlCount()
           if(self.checkConcurrency(ssp.name,urlCount)):
@@ -49,7 +53,7 @@ class SimplifiedMain():
       except Exception as err:
         self.log(err,logging.ERROR)
         time.sleep(10)
-      time.sleep(0.7)
+      time.sleep(0.5)
     self._runflag=False
     self.log('download app stoped......')
 

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
 import re
+from xml_helper import XmlDictConfig,convert2Dic
 def listA(html,start=None,end=None):
   if(not html): return []
   patternLst = re.compile(u'<a[\s]+[^>]*>[\s\S]*?</a>')
@@ -30,7 +31,7 @@ def listA(html,start=None,end=None):
 
   return lst
 
-def listTag(tag,html,start=None,end=None):
+def getElementsByTag(tag,html,start=None,end=None):
   if(not tag or not html): return None
   s = 0
   e = len(html)
@@ -39,7 +40,13 @@ def listTag(tag,html,start=None,end=None):
 
   if(s < 0 or e < start): return None
   patternLst = re.compile(u'<'+tag+'[\s]+[^>]*>[\s\S]*?</'+tag+'>')
-  return patternLst.findall(html,s,e)
+  lstStr = patternLst.findall(html,s,e)
+  lst=[]
+  for line in lstStr:
+    dic=convert2Dic(line)
+    if(dic):
+      lst.append(dic)
+  return lst
 
 def getElementByID(id,html,start=None,end=None):
   if(not id or not html): return None
@@ -57,7 +64,7 @@ def getElementByID(id,html,start=None,end=None):
   tmp = pattern.search(html,s,e)
   dom = None
   if tmp: dom = tmp.group()
-  return dom
+  return convert2Dic(dom)
 
 def getElementsByClass(className,html,start=None,end=None):
   if(not className or not html): return None
@@ -69,7 +76,12 @@ def getElementsByClass(className,html,start=None,end=None):
   if(s < 0 or e < start): return None
 
   pattern = re.compile(u'<[\s\S]+?[\s]class[=\'"\s]+[\s\S]*?'+className+'[\'" ]+[\s\S]*?</[\w]+?>') 
-  lst = pattern.findall(html,s,e)
+  lstStr = pattern.findall(html,s,e)
+  lst=[]
+  for line in lstStr:
+    dic=convert2Dic(line)
+    if(dic):
+      lst.append(dic)
   return lst
 
 def getElementTextByID(id,html,start=None,end=None):
@@ -100,5 +112,10 @@ def getElementAttrByID(id,attr,html,start=None,end=None):
       return tmp.group("attr")
   return None
 
-print getElementsByClass('asd','''<div id="write-notes-ad" class='asd'>123</div>
-      <div id="youdao-fixed-ad" class='asd woer'></div>''')
+# print getElementsByClass('asd','''<div id="write-notes-ad" class='asd'>123</div>
+#       <div id="youdao-fixed-ad" class='asd woer'></div>''')
+# print getElementByID('write-notes-ad','''<div id="write-notes-ad" class='asd'>123</div>
+#       <div id="youdao-fixed-ad" class='asd woer'></div>''')
+
+# print getElementsByTag('div','''<div id="write-notes-ad" class='asd'>123</div>
+#       <div id="youdao-fixed-ad" class='asd woer'></div>''')
