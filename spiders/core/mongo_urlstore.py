@@ -27,7 +27,6 @@ class MongoUrlStore():
     return conn[self._dbName]
 
   def popUrl(self):
-    return None
     db = self._connect()
     lst=[]
     while(True):
