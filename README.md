@@ -7,7 +7,7 @@ simplified scrapy, A Simple Web Crawle
 进入项目根目录，执行下面命令  
 `python start.py`
 # Demo
-项目中有爬虫一个例子，在文件夹spiders下，文件名为demoSpider.py。自定义的爬虫类需要继承Spider类
+项目中爬虫例子，在文件夹spiders下，文件名为demoSpider.py。自定义的爬虫类需要继承Spider类
 ```
 from core.spider import Spider 
 class DemoSpider(Spider):
