@@ -2,9 +2,9 @@ from core.spider import Spider
 from core.redis_urlstore import RedisUrlStore
 from core.mongo_objstore import MongoObjStore
 class DemoSpider(Spider):
-  # concurrencyPer1s=2
+
   name = 'demo-spider'
-  start_urls = ['http://health.sina.com.cn/']
+  start_urls = ['http://www.scrapyd.cn/']
   models = ['auto_main_2','auto_obj']
 
   # Storing URLs with redis, if you don't like this, please comment it out 
