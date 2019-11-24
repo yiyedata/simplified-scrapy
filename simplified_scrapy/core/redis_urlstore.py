@@ -1,7 +1,11 @@
 #!/usr/bin/python
 #coding=utf-8
-import redis,json,hashlib,random
-from utils import convert2Int
+import redis,json,random
+import sys
+if sys.version_info.major == 2:
+  from utils import convertUrl2Int,md5
+else:
+  from .utils import convertUrl2Int,md5
 class RedisUrlStore():
   _queueName = 'url_queue_'
   _setName = 'url_set_'
@@ -43,8 +47,7 @@ class RedisUrlStore():
     return r.llen(self._queueName)
   def checkUrl(self,url):
     r = redis.Redis(connection_pool=self.pool)
-    md5 = hashlib.md5(url).hexdigest()
-    result = r.sadd(self._setName, md5)
+    result = r.sadd(self._setName, md5(url))
     return not result
   def saveUrl(self, urls,i=None):
     r = redis.Redis(connection_pool=self.pool)
@@ -63,7 +66,7 @@ class RedisUrlStore():
   
   def _getIndex(self, url):
     if(not self._multiQueue or not url): return None
-    return convert2Int(url)
+    return convertUrl2Int(url)
 
   def resetUrls(self, urls):
     r = redis.Redis(connection_pool=self.pool)
@@ -71,3 +74,6 @@ class RedisUrlStore():
       if(isinstance(url,str)):
         url={'url':url}
       r.rpush(self._queueName,json.dumps(url))
+  
+  def updateState(self, url, state):
+    pass

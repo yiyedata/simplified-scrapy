@@ -1,6 +1,11 @@
 #!/usr/bin/python
 #coding=utf-8
-import os,io,hashlib
+import os,io
+import sys
+if sys.version_info.major == 2:
+  from utils import printInfo,getTimeNow,md5
+else:
+  from .utils import printInfo,getTimeNow,md5
 class HtmlStore:
   _htmls=[]
   _htmlPath='htmls/{}/'
@@ -17,12 +22,12 @@ class HtmlStore:
     else:
       self._saveHtml(url["url"],html)
 
-  def popHtml(self):
+  def popHtml(self,state=0):
     if(len(self._htmls)>0):
       return self._htmls.pop()
 
   def _saveHtml(self,url,html):
-    filename = hashlib.md5(url).hexdigest()+'.htm'   
+    filename = md5(url)+'.htm'   
     file = io.open(self._htmlPath+filename, "w",encoding="utf-8")
     file.write(html)
     file.close()

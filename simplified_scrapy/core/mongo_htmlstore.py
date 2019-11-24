@@ -1,6 +1,5 @@
 #!/usr/bin/python
 #coding=utf-8
-import hashlib
 from pymongo import MongoClient
 class MongoHtmlStore:
   _host='127.0.0.1'
@@ -40,8 +39,8 @@ class MongoHtmlStore:
     #   id = hashlib.md5(url["url"]).hexdigest()
     db[self._tbName].update({"_id": id}, {"$set": {"state": state}})
 
-  def popHtml(self):
+  def popHtml(self,state=0):
     db = self._connect()
-    obj = db[self._tbName].find_one({"state": 0})
+    obj = db[self._tbName].find_one({"state": state})
     obj["id"]=obj["_id"]
     return obj

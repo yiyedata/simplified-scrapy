@@ -4,14 +4,21 @@ try:
   import xml.etree.cElementTree as ET
 except ImportError:
   import xml.etree.ElementTree as ET
+import sys
+if sys.version_info.major == 2:
+  from utils import printInfo
+else:
+  from .utils import printInfo
+  
 
 class XmlDictConfig(dict):
   def __init__(self, parent_element):
     if parent_element.items():
       self.update(dict(parent_element.items()))
       self['text'] = parent_element.text
-    
+    flag = False
     for element in parent_element:
+      flag = True
       if(not self.get(element.tag)):
         self.update({element.tag: []})
 
@@ -20,6 +27,9 @@ class XmlDictConfig(dict):
       count = len(element)
       if(count>0):
         self.ele2arr(dic,element)
+    if(not flag):
+      self.update({'tag':parent_element.tag, 'text':parent_element.text})
+
   def getDic(self,element):
     if element.items():
       dic = dict(element.items())
@@ -41,15 +51,23 @@ class XmlDictConfig(dict):
       if(element.tail):
         dic["text"] = dic["text"]+element.tail
       dic["children"][element.tag].append(self.getDic(element))
+
+  def __getattr__(self,attr):
+    if(self.get(attr)):
+      return self.get(attr)
+    else:
+      return None
+
+  def __getitem__(self,attr):
+    if(self.get(attr)):
+      return self.get(attr)
+    else:
+      return None
+
 def convert2Dic(html):
   try:
     tree = ET.XML(html)
     return XmlDictConfig(tree)
   except Exception as err:
-    print err
+    printInfo(err)
   return None
-# tree = ET.XML('''<list><div id="write-notes-ad" class='asd'><span>12345</span>1<span>12345</span>23</div>
-# <div id="write-2" class='asd2'>1232</div><span>asd123</span><span>1234</span></list>''')
-# # xmlList = XmlListConfig(tree.items())
-# xmldict = XmlDictConfig(tree)
-# print xmldict

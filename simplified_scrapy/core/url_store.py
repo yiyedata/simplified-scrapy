@@ -1,7 +1,13 @@
 #!/usr/bin/python
 #coding=utf-8
-import io,json,hashlib,os
+import io,json,os
 from threading import Lock
+import sys
+if sys.version_info.major == 2:
+  from utils import printInfo,md5
+else:
+  from .utils import printInfo,md5
+  
 class UrlStore:
   _urls=[]
   _i=0
@@ -41,13 +47,13 @@ class UrlStore:
         if(line):
           self._urls.append(json.loads(line[:-1]))
     except Exception as err:
-      print err 
+      printInfo(err)
       
   def __del__(self):
     self._urlfile.close()
     self._dicfile.close()
     self._indexfile.close()
-    print '__del__'
+    printInfo('__del__')
 
   def popUrl(self):
     url=None
@@ -64,8 +70,7 @@ class UrlStore:
     return len(self._urls)
 
   def checkUrl(self,url):
-    md5=hashlib.md5(url).hexdigest()
-    return md5 in self._dic
+    return md5(url) in self._dic
 
   def saveUrl(self, urls,i=None):
     # if (type(urls).__name__=='dict'):
@@ -76,8 +81,7 @@ class UrlStore:
       for url in urls:
         if(isinstance(url,str)):
           url={'url':url}
-        md5=hashlib.md5(url['url']).hexdigest()
-        if(md5 not in self._dic):
+        if(md5(url['url']) not in self._dic):
           self._urls.append(url)
           self._dic.add(md5)
           self._writeFile(url,md5)
@@ -85,7 +89,7 @@ class UrlStore:
       if(flag):
         self._flushFile()
     except Exception as err:
-      print err
+      printInfo(err)
     finally:
       self._lock.release()
 
@@ -104,14 +108,17 @@ class UrlStore:
       for url in urls:
         if(isinstance(url,str)):
           url={'url':url}
-        md5=hashlib.md5(url['url']).hexdigest()
+        id=md5(url['url'])
         self._urls.append(url)
-        self._dic.add(md5)
-        self._writeFile(url,md5)
+        self._dic.add(id)
+        self._writeFile(url,id)
         flag=True
       if(flag):
         self._flushFile()
     except Exception as err:
-      print err
+      printInfo(err)
     finally:
       self._lock.release()
+
+  def updateState(self, url, state):
+    pass

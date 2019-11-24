@@ -9,9 +9,10 @@ logging.basicConfig(
   
 SPIDERS=[
   # {'file':'spiders.demoSpider','class':'DemoSpider'},
-  {'file':'spiders.meishi_all','class':'MeishiSpider'}
+  # {'file':'spiders.meishi_all','class':'MeishiSpider'}
+  {'file':'spiders.imageSpider','class':'ImageSpider'}
 ]
 #并发下载线程数
-CONCURRENCY=5
+CONCURRENCY=1
 #10秒内请求页面数最大值
-CONCURRENCYPER1S=10
+CONCURRENCYPER1S=6

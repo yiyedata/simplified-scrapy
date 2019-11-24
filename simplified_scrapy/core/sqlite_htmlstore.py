@@ -1,29 +1,38 @@
 #!/usr/bin/python
 #coding=utf-8
-import os,io,hashlib,json,time
+import os,io,json,time
 import sqlite3
-from utils import getTimeNow
+import sys
+if sys.version_info.major == 2:
+  from utils import printInfo,getTimeNow,md5
+else:
+  from .utils import printInfo,getTimeNow,md5
 class SqliteHtmlStore:
   # _htmls=[]
   _htmlPath='htmls/{}/'
   _dbPath='db/{}.db'
   _tbName='htmls'
   def __init__(self, name):
-    self._htmlPath = self._htmlPath.format(name)
-    if(not os.path.exists('htmls/')):
-      os.mkdir('htmls/')
-    if(not os.path.exists(self._htmlPath)):
-      os.mkdir(self._htmlPath)
-    self._dbPath = self._dbPath.format(name)
-    conn = sqlite3.connect(self._dbPath)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS htmls
-          (id INTEGER PRIMARY KEY autoincrement,
-          json  TEXT  NOT NULL,
-          state INT NOT NULL DEFAULT 0,
-          tm  TEXT);''')
-    conn.commit()
-    conn.close()
+    try:
+      self._htmlPath = self._htmlPath.format(name)
+      if(not os.path.exists('db/')):
+        os.mkdir('db/')
+      if(not os.path.exists('htmls/')):
+        os.mkdir('htmls/')
+      if(not os.path.exists(self._htmlPath)):
+        os.mkdir(self._htmlPath)
+      self._dbPath = self._dbPath.format(name)
+      conn = sqlite3.connect(self._dbPath)
+      c = conn.cursor()
+      c.execute('''CREATE TABLE IF NOT EXISTS htmls
+            (id INTEGER PRIMARY KEY autoincrement,
+            json  TEXT  NOT NULL,
+            state INT NOT NULL DEFAULT 0,
+            tm  TEXT);''')
+      conn.commit()
+      conn.close()
+    except Exception as err:
+      printInfo(err)
   
   # def __del__(self):
   #   if self._conn: self._conn.close()
@@ -38,11 +47,11 @@ class SqliteHtmlStore:
     conn.commit() 
     conn.close()
 
-  def popHtml(self):
+  def popHtml(self,state=0):
     # if(len(self._htmls)>0):
     #   return self._htmls.pop()
     conn = sqlite3.connect(self._dbPath)
-    cursor = conn.cursor().execute("select id,json from htmls where state=0 limit 0,1")
+    cursor = conn.cursor().execute("select id,json from htmls where state="+str(state)+" limit 0,1")
     for row in cursor:
       obj=json.loads(row[1])
       obj['id']=row[0]
@@ -51,7 +60,7 @@ class SqliteHtmlStore:
     conn.close()
 
   def _saveHtml(self,url,html):
-    filename = hashlib.md5(url).hexdigest()+'.htm'
+    filename = md5(url)+'.htm'
     if(not os.path.exists(self._htmlPath)):
       os.mkdir(self._htmlPath)
     file = io.open(self._htmlPath+filename, "w",encoding="utf-8")
