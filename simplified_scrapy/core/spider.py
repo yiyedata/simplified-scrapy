@@ -2,24 +2,15 @@
 #coding=utf-8
 import json,re,logging,time,io,os
 import sys
-if sys.version_info.major == 2:
-  from config_helper import Configs
-  from sqlite_cookiestore import SqliteCookieStore
-  from request_helper import requestPost,requestGet,getResponseStr,extractHtml
-  from utils import convertTime2Str,convertStr2Time,printInfo,absoluteUrl
-  from regex_helper import *
-  from sqlite_urlstore import SqliteUrlStore
-  from sqlite_htmlstore import SqliteHtmlStore
-  from obj_store import ObjStore
-else:
-  from .config_helper import Configs
-  from .sqlite_cookiestore import SqliteCookieStore
-  from .request_helper import requestPost,requestGet,getResponseStr,extractHtml
-  from .utils import convertTime2Str,convertStr2Time,printInfo,absoluteUrl
-  from .regex_helper import *
-  from .sqlite_urlstore import SqliteUrlStore
-  from .sqlite_htmlstore import SqliteHtmlStore
-  from .obj_store import ObjStore
+from simplified_scrapy.core.config_helper import Configs
+from simplified_scrapy.core.sqlite_cookiestore import SqliteCookieStore
+from simplified_scrapy.core.request_helper import requestPost,requestGet,getResponseStr,extractHtml
+from simplified_scrapy.core.utils import convertTime2Str,convertStr2Time,printInfo,absoluteUrl
+from simplified_scrapy.core.regex_helper import *
+from simplified_scrapy.core.sqlite_urlstore import SqliteUrlStore
+from simplified_scrapy.core.sqlite_htmlstore import SqliteHtmlStore
+from simplified_scrapy.core.obj_store import ObjStore
+
 class Spider():
   name = None
   models = None
@@ -60,6 +51,9 @@ class Spider():
       self.getElementTextByID=getElementTextByID
       self.getElementByTag=getElementByTag
       self.getElementByClass=getElementByClass
+      self.getElement=getElement
+      self.getElements=getElements
+      self.getElementByAttr=getElementByAttr
       self.tm=0
       self.absoluteUrl=absoluteUrl
     except Exception as err:

@@ -3,10 +3,8 @@
 from pymongo import MongoClient
 import json,random,random
 import sys
-if sys.version_info.major == 2:
-  from utils import printInfo,convertUrl2Int,md5
-else:
-  from .utils import printInfo,convertUrl2Int,md5
+from simplified_scrapy.core.utils import printInfo,convertUrl2Int,md5
+
 class MongoUrlStore():
   _host = '127.0.0.1'
   _port = 27017

@@ -1,14 +1,8 @@
 #!/usr/bin/python
 #coding=utf-8
 import json,re,importlib,os
-import sys
-if sys.version_info.major == 2:
-  from core.request_helper import extractHtml
-  from core.utils import printInfo
-else:
-  from .core.request_helper import extractHtml
-  from .core.utils import printInfo
-
+from simplified_scrapy.core.request_helper import extractHtml
+from simplified_scrapy.core.utils import printInfo
 
 class Extracter:
   _models={

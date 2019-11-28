@@ -2,10 +2,8 @@
 #coding=utf-8
 import os,io
 import sys
-if sys.version_info.major == 2:
-  from utils import printInfo,getTimeNow,md5
-else:
-  from .utils import printInfo,getTimeNow,md5
+from simplified_scrapy.core.utils import printInfo,getTimeNow,md5
+
 class HtmlStore:
   _htmls=[]
   _htmlPath='htmls/{}/'

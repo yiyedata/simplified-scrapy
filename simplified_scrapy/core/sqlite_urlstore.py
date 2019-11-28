@@ -2,10 +2,7 @@
 #coding=utf-8
 import json,random,sqlite3,logging,os
 import sys
-if sys.version_info.major == 2:
-  from utils import printInfo,getTimeNow,md5
-else:
-  from .utils import printInfo,getTimeNow,md5
+from simplified_scrapy.core.utils import printInfo,getTimeNow,md5
   
 class SqliteUrlStore():
   _dbPath = 'db/{}.db'

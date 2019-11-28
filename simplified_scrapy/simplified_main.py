@@ -1,25 +1,17 @@
 #!/usr/bin/python
 #coding=utf-8
 import logging
-logging.basicConfig(
-  level=logging.DEBUG,
-  filename='spider.log',
-  filemode='a',
-  format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s')
+import simplified_scrapy.core.logex
 import threading,traceback,time,importlib,imp,os,json,io
 from imp import reload
 from concurrent.futures import ThreadPoolExecutor
+from simplified_scrapy.core.utils import printInfo,getFileModifyTime,isExistsFile
+from simplified_scrapy.downloader import execDownload
+from simplified_scrapy.extracter import Extracter
 import sys
 if sys.version_info.major == 2:
-  from core.utils import printInfo,getFileModifyTime,isExistsFile
-  from downloader import execDownload
-  from extracter import Extracter
   reload(sys)
   sys.setdefaultencoding('utf-8')
-else:
-  from .core.utils import printInfo,getFileModifyTime,isExistsFile
-  from .downloader import execDownload
-  from .extracter import Extracter
 try:
   from setting import SETTINGFILE
 except ImportError:
@@ -98,12 +90,6 @@ class _SimplifiedMain():
   def startThread(self,ssp=None):
     if(self._started): return
     self._started = True
-    if(ssp):
-      logging.basicConfig(
-        level=logging.DEBUG,
-        filename='spider.log',
-        filemode='a',
-        format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s')
 
     self._init(ssp)
     threadExtract = threading.Thread(target=self.extractThread)

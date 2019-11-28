@@ -2,57 +2,36 @@
 #coding=utf-8
 import os,io,json
 import sys
-from simplified_scrapy.core.utils import printInfo
+from simplified_scrapy.core.dictex import Dict
 if sys.version_info.major == 2:
   from urlparse import urlparse
 else:
   import urllib
   urlparse = urllib.parse.urlparse
-class CookieStore:
-  _cookies={}
-  _cookieFilename = 'db/cookies.yd'
+class MemCookieStore:
+  _cookies=Dict()
   
   def __init__(self):
-    try:
-      if(not os.path.exists('db/')):
-        os.mkdir('db/')
-      self._cookiefile = io.open(self._cookieFilename, "a+",encoding="utf-8")
-      self._cookiefile.seek(0)
-      line = 'start'
-      while(line):
-        line = self._cookiefile.readline()
-        if(line):
-          line=line[:-1]
-          start=line.index(',')
-          if(start>0):
-            self._cookies[line[0:start]]=line[start+1:]
-      self._refreshCookieFile()
-    except Exception as err:
-      printInfo(err) 
-  def _refreshCookieFile(self):
-    self._cookiefile.seek(0)
-    self._cookiefile.truncate()
-    for k,v in self._cookies.items():
-      self._cookiefile.write(u'{},{}\n'.format(k,v))
-      
-    self._cookiefile.flush()
-
-  def __del__(self):
-    self._cookiefile.close()
+    pass
 
   def getCookie(self, url):
     domain = urlparse(url).netloc
-    cookie = self._cookies.get(domain)
+    cookie = self._getCookie(domain)
     if(not cookie):
       start = domain.index('.')+1
       domain = domain[start:]
-      cookie = self._cookies.get(domain)
+      cookie = self._getCookie(domain)
     return cookie
+
+  def _getCookie(self, domain):
+    cookie = self._cookies.get(domain)
+    return cookie
+
   def setCookie(self, url, cookie):
     if(not cookie): return
     domain = urlparse(url).netloc
     kvs={}
-    old=self._cookies.get(domain)
+    old = self._getCookie(domain)
     if(old):
       self._parseCookie(old,kvs)
 
@@ -63,7 +42,6 @@ class CookieStore:
         self._parseCookie(line,kvs)
     strCookie = self._dic2str(kvs)
     self._cookies[domain] = strCookie
-    self._cookiefile.write(u'{},{}\n'.format(domain,strCookie))
   def _dic2str(self, dic):
     strs=None
     for k,v in dic.items():
@@ -90,6 +68,3 @@ class CookieStore:
       if(len(kv)>1): value=kv[1].strip()
       kvs[kv[0].strip()]=value
     
-
-# tmp = CookieStore()
-# tmp.setCookie('http://127.0.0.1:1001/demo','sid=s%3A1s-KtykINQomDW5-5iduk6BOkX1tCT96.9qTyuzOf7Ds6nfNkQhP8PVMZ3qbpukqmX5multsqdbQ; Path=/; HttpOnly')

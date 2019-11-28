@@ -2,10 +2,7 @@
 #coding=utf-8
 import json,os
 import sys
-if sys.version_info.major == 2:
-  from utils import appendFile
-else:
-  from .utils import appendFile
+from simplified_scrapy.core.utils import appendFile
 class ObjStore:
   _objFilename='data/{}_obj.json'
   def __init__(self, name):

@@ -2,10 +2,8 @@
 #coding=utf-8
 import redis,json,random
 import sys
-if sys.version_info.major == 2:
-  from utils import convertUrl2Int,md5
-else:
-  from .utils import convertUrl2Int,md5
+from simplified_scrapy.core.utils import printInfo,convertUrl2Int,md5
+
 class RedisUrlStore():
   _queueName = 'url_queue_'
   _setName = 'url_set_'

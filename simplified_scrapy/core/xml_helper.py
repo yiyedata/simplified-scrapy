@@ -4,13 +4,9 @@ try:
   import xml.etree.cElementTree as ET
 except ImportError:
   import xml.etree.ElementTree as ET
-import sys
-if sys.version_info.major == 2:
-  from utils import printInfo
-else:
-  from .utils import printInfo
-  
-
+import sys,re
+from simplified_scrapy.core.utils import printInfo
+from simplified_scrapy.core.dictex import Dict
 class XmlDictConfig(dict):
   def __init__(self, parent_element):
     if parent_element.items():
@@ -66,8 +62,32 @@ class XmlDictConfig(dict):
 
 def convert2Dic(html):
   try:
-    tree = ET.XML(html)
-    return XmlDictConfig(tree)
+    html = re.sub('(\\s|&nbsp;)+', ' ', html, 0)
+    start = html.find('<')
+    end = html.find('>')
+    paras = html[start+1:end].strip('/').split()
+    dic = Dict()
+    first = True
+    for para in paras:
+      if(first):
+        first=False
+        dic['tag']=para
+        continue
+      kv=para.split('=')
+      key = kv[0].strip()
+      if(len(kv)==1):
+        if(not dic[key]): dic[key]=""
+      else:
+        if(not dic[key]): 
+          dic[key]=kv[1].strip().strip('"').strip('\'')
+        else: 
+          dic[key]+=' ' 
+          dic[key]+=kv[1].strip().strip('"').strip('\'')
+    return dic
+    # tree = ET.XML(html)
+    # return XmlDictConfig(tree)
   except Exception as err:
     printInfo(err)
   return None
+
+# print (convert2Dic('<div class="container" id="app" class="page-board/index" />test</div>'))

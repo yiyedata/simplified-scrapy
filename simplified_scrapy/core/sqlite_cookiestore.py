@@ -2,13 +2,13 @@
 #coding=utf-8
 import os,io,json
 import sys
+from simplified_scrapy.core.config_helper import Configs
 if sys.version_info.major == 2:
   from urlparse import urlparse
-  from config_helper import Configs
 else:
   import urllib
   urlparse = urllib.parse.urlparse
-  from .config_helper import Configs
+  
 class SqliteCookieStore:
   _cookies={}
   _preKey = 'cookie_'

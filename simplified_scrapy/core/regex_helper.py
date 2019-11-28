@@ -2,12 +2,9 @@
 #coding=utf-8
 import re,json
 import sys
-if sys.version_info.major == 2:
-  from xml_helper import XmlDictConfig,convert2Dic
-  from utils import absoluteUrl,printInfo
-else:
-  from .xml_helper import XmlDictConfig,convert2Dic
-  from .utils import absoluteUrl,printInfo
+from simplified_scrapy.core.utils import printInfo,absoluteUrl,md5
+from simplified_scrapy.core.xml_helper import XmlDictConfig,convert2Dic
+
 def getSection(html,start=None,end=None):
   s = 0
   e = len(html)
@@ -138,16 +135,23 @@ def _getElementByTag(tag,html,start=None,end=None):
     start = html.find(dom)
     end = start+len(dom)
     tagLen = len(tag)+3
-    i = html.find('>',start)
-    while i>=0:
-      i = html.find(tag, i, end-tagLen)
-      if(i>=0):
-        e = html.find('</'+tag+'>', end)
-        if e<0: break
-        i = end
-        end = e+tagLen
-        continue
-    html = re.compile('[\n\t]+').sub('', html[start:end])
+    while True:
+      count = _getTagCount(dom,tag)
+      if(count>0):
+        count2 = _getTagCount(dom,"/"+tag+">")-1
+        if(count==count2): break
+        count -= count2
+        while(count>0):
+          count-=1
+          tmp = html.find('</'+tag+'>', end)+tagLen
+          if(tmp>tagLen):
+            end=tmp
+
+        dom = html[start:end]
+      else:
+        break
+  
+    html = re.compile('[\n\t]+').sub('', dom)#html[start:end])
     e2 = html.find('>')+1
     ele = convert2Dic(html[0:e2]+'</'+tag+'>')
     ele['innerHtml']=(html[e2:len(html)-tagLen]).strip()
@@ -164,14 +168,18 @@ def _getElementByTag(tag,html,start=None,end=None):
 def getElementByID(id,html,start=None,end=None):
   return getElementByAttr('id',id,html,start,end)
   
-def _getTag(html, end):
+def _getTag(html, end, attr):
   start = html.rfind('<',0,end)
-  if(start >= 0):
+  if(start >= 0 and end-start<300):
+    if(attr and html[start:end].find(attr)<0):
+      return None
     pattern = re.compile(u'<[\s]*?(?P<tag>[\S]*?)[\s]')
     html = html[start:end]
     tmp = pattern.search(html)
     if tmp: 
-      return tmp.group("tag")
+      tag = tmp.group("tag")
+      if(re.compile(u'^[0-9a-zA-Z_.]+$').match(tag)):
+        return tag
   return None
 
 def getElementsByClass(className,html,start=None,end=None):
@@ -226,30 +234,38 @@ def _getElement(tag,attr='class',value=None,html=None,start=None,end=None):
     while index>=0:
       index = html.find(value,index)
       if(index<0): return None
-      tag = _getTag(html,index)
+      tag = _getTag(html,index,attr)
       if not tag: 
         index+=1
         continue
       else: break
   if not tag: return None
 
-  pattern = re.compile(u'<[\s]*'+tag+'[^>]+?'+attr+'[=\'"\s]+'+value+'[\'"][\s\S]*?>[\s\S]*?</'+tag+'>') 
+  strP = u'<[\s]*'+tag+'[^>]+?'+attr+'[=\'"\s]+(|[ \w]+[ ])'+value+'[ \'"][\s\S]*?>[\s\S]*?</'+tag+'>'
+  pattern = re.compile(strP) 
   m = pattern.search(html)
   if m: 
     dom = m.group(0)
     start = html.find(dom)
     end = start+len(dom)
     tagLen = len(tag)+3
-    i = html.find('>',start)
-    while i>=0:
-      i = html.find(tag, i, end-tagLen)
-      if(i>=0):
-        e = html.find('</'+tag+'>', end)
-        if e<0: break
-        i = end
-        end = e+tagLen
-        continue
-    html = re.compile('[\n\t]+').sub('', html[start:end])
+    while True:
+      count = _getTagCount(dom,tag)
+      if(count>0):
+        count2 = _getTagCount(dom,"/"+tag+">")-1
+        if(count==count2): break
+        count -= count2
+        while(count>0):
+          count-=1
+          tmp = html.find('</'+tag+'>', end)+tagLen
+          if(tmp>tagLen):
+            end=tmp
+
+        dom = html[start:end]
+      else:
+        break
+    
+    html = re.compile('[\n\t]+').sub('', dom)
     e2 = html.find('>')+1
     ele = convert2Dic(html[0:e2]+'</'+tag+'>')
     ele['innerHtml']=(html[e2:len(html)-tagLen]).strip()
@@ -262,7 +278,17 @@ def _getElement(tag,attr='class',value=None,html=None,start=None,end=None):
       ele['text']=ele['innerText']
     return (ele,start,end)
   return None
-
+def _getTagCount(html,tag):
+  tag='<'+tag
+  tagLen=len(tag)
+  count=0
+  i=1
+  while(i>0):
+    s=html.find(tag,i+tagLen)
+    if(s>0):
+      count+=1
+    i=s
+  return count
 def getElementBy(attr,value,html,start=None,end=None):
   return getElementByAttr(attr,value,html,start,end)
 
@@ -275,5 +301,5 @@ def getElementByClass(className,html,start=None,end=None):
 def getElementTextByID(id,html,start=None,end=None):
   return getElementByAttr('id',id,html,start,end)
 
-def getElementAttrByID(id,attr,html,start=None,end=None):
-  return getElementByAttr('id',id,html,start,end)
+# def getElementAttrByID(id,attr,html,start=None,end=None):
+#   return getElementByAttr('id',id,html,start,end)

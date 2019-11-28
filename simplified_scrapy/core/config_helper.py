@@ -2,10 +2,7 @@
 #coding=utf-8
 import json,sqlite3,logging,time,os
 import sys
-if sys.version_info.major == 2:
-  from utils import printInfo
-else:
-  from .utils import printInfo
+from simplified_scrapy.core.utils import printInfo
 class ConfigHelper():
   _dbPath = 'db/config.db'
   _tbName = 'configs'

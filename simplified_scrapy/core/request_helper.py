@@ -7,16 +7,26 @@ import sys,socket,random,time,re
 import traceback,logging
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
+from simplified_scrapy.core.utils import printInfo,getTime,saveFile
 if sys.version_info.major == 2:
   import urllib2
-  from utils import printInfo,getTime,saveFile
 else:
   import urllib.request as urllib2
-  from .utils import printInfo,getTime,saveFile
 try:
   import spider_resource
 except ImportError:
   spider_resource = None
+
+class RequestError(Exception):
+    def __init__(self,ErrorInfo,url=None):
+        super().__init__(self)
+        self.errorinfo=ErrorInfo
+        self.url=url
+    def __str__(self):
+      if(self.url):
+        return str(self.errorinfo)+"\n"+self.url
+      else:
+        return self.errorinfo
 
 def log(err,data):
   printInfo(err,data)
@@ -32,7 +42,7 @@ _jsonHeader={
   'Accept':'Accept: application/json, text/plain, */*'
 }
 
-def requestPost(url, data, headers, useIp=False, ssp=None,timeout=30):
+def requestPost(url, data, headers, useIp=False, ssp=None,timeout=30,error=False):
   response = None
   if headers: header = headers
   else: header = {}
@@ -61,17 +71,20 @@ def requestPost(url, data, headers, useIp=False, ssp=None,timeout=30):
     if(not opener): opener = urllib2.build_opener()
     
     response = opener.open(req,None,timeout)
-    if(ssp):
+    if(ssp and not error):
       return ssp.afterResponse(response,url)
-    return getResponseStr(response.read(),url)
+    return getResponseStr(response.read(),url,error)
   except Exception as err:
-    log(err,url)
+    if(not error):
+      log(err,url)
+    else:
+      raise RequestError(err,url)
   finally:
     if response:
       response.close()
   return "_error_"
 
-def getResponseStr(htmSource,url):
+def getResponseStr(htmSource,url,error=False):
   html="_error_"
   if(htmSource):
     try:
@@ -80,7 +93,10 @@ def getResponseStr(htmSource,url):
       try:
         html=htmSource.decode("gb18030")
       except Exception as err:
-        log(err.reason or err.message,url)
+        if(not error):
+          log(err.reason or err.message,url)
+        else:
+          return htmSource
         # try:
         #   html=str(htmSource).decode("string_escape")
         # except Exception as err:
@@ -101,7 +117,7 @@ def dic2tuple(dic):
     tp.append((key,dic[key]))
   return tp
 
-def requestGet(url, headers, useIp, ssp=None,timeout=30):
+def requestGet(url, headers, useIp, ssp=None,timeout=30,error=False):
   response = None
   if headers: header = headers 
   else: header = {}
@@ -129,11 +145,14 @@ def requestGet(url, headers, useIp, ssp=None,timeout=30):
     if(not opener): opener = urllib2.build_opener()
 
     response = opener.open(req,None,timeout)
-    if(ssp): data = ssp.afterResponse(response,url)
-    else: data = getResponseStr(response.read(),url)
+    if(ssp and not error): data = ssp.afterResponse(response,url)
+    else: data = getResponseStr(response.read(),url,error)
     return data
   except Exception as err:
-    log(err,url)
+    if(not error):
+      log(err,url)
+    else:
+      raise RequestError(err,url)
   finally:
     if response: response.close()
   return "_error_"
