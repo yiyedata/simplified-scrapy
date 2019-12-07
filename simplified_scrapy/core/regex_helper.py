@@ -4,8 +4,9 @@ import re,json
 import sys
 from simplified_scrapy.core.utils import printInfo,absoluteUrl,md5
 from simplified_scrapy.core.xml_helper import XmlDictConfig,convert2Dic
+from simplified_scrapy.core.dictex import Dict
 
-def getSection(html,start=None,end=None):
+def getSection(html,start=None,end=None,before=None):
   s = 0
   e = len(html)
   if(start): 
@@ -13,11 +14,14 @@ def getSection(html,start=None,end=None):
     else: s=html.find(start)
   if(end): 
     if(isinstance(end,int)): e=end
-    else: e=html.find(end)
+    else: e=html.find(end,s)
+  if(before):
+    if(isinstance(before,int)): s=before
+    else: s=html.rfind(before,0,end)
   return (s,e)
-def listA(html,baseUrl=None,start=None,end=None):
+def listA(html,baseUrl=None,start=None,end=None,before=None):
   if(not html): return []
-  section = getSection(html,start,end)
+  section = getSection(html,start,end,before)
   s = section[0]
   e = section[1]
   if(s < 0 or e < s): return []
@@ -58,9 +62,9 @@ def listA(html,baseUrl=None,start=None,end=None):
       printInfo(ex)
     
   return lst
-def listImg(html,baseUrl=None,start=None,end=None):
+def listImg(html,baseUrl=None,start=None,end=None,before=None):
   if(not html or html.find("<img")<0): return []
-  section = getSection(html,start,end)
+  section = getSection(html,start,end,before)
   s = section[0]
   e = section[1]
 
@@ -96,9 +100,9 @@ def listImg(html,baseUrl=None,start=None,end=None):
     
   return lst
 
-def getElementsByTag(tag,html,start=None,end=None):
+def getElementsByTag(tag,html,start=None,end=None,before=None):
   lst=[]
-  section = getSection(html,start,end)
+  section = getSection(html,start,end,before)
   if(section[1]<=section[0]):
     return lst
   h=html[section[0]:section[1]]
@@ -112,28 +116,38 @@ def getElementsByTag(tag,html,start=None,end=None):
       break
   return lst
 
-def getElementByTag(tag,html,start=None,end=None):
-  obj = _getElementByTag(tag,html,start,end)
+def getElementByTag(tag,html,start=None,end=None,before=None):
+  obj = _getElementByTag(tag,html,start,end,before)
   if(obj and obj[0]):
     return obj[0]
   return None
-
-def _getElementByTag(tag,html,start=None,end=None):
+def _checkSingleTag(tag):
+  tags = ['br','hr','img','input','param','meta','link']
+  return tag.lower() in tags
+def _getElementByTag(tag,html,start=None,end=None,before=None):
   if(not tag or not html or html.find(tag)<0): return None
-  section = getSection(html,start,end)
+  section = getSection(html,start,end,before)
   s = section[0]
   e = section[1]
   if(s < 0 or e < s): return None
 
   html = html[s:e]
   if(not html): return None
-
-  pattern = re.compile(u'<[\s]*'+tag+'[^>]*?>[\s\S]*?</'+tag+'>') 
+  singleTag = _checkSingleTag(tag)
+  if(singleTag):
+    pattern = re.compile(u'<'+tag+'[^>]*?>') 
+  else:
+    pattern = re.compile(u'<[\s]*'+tag+'[^>]*?>[\s\S]*?</'+tag+'>') 
   m = pattern.search(html)
   if m: 
     dom = m.group(0)
     start = html.find(dom)
     end = start+len(dom)
+    if(singleTag):
+      ele = convert2Dic(dom)
+      ele['innerText']=""
+      ele['text']=""
+      return (ele,start,end)
     tagLen = len(tag)+3
     while True:
       count = _getTagCount(dom,tag)
@@ -165,8 +179,8 @@ def _getElementByTag(tag,html,start=None,end=None):
     return (ele,start,end)
   return None
 
-def getElementByID(id,html,start=None,end=None):
-  return getElementByAttr('id',id,html,start,end)
+def getElementByID(id,html,start=None,end=None,before=None):
+  return getElementByAttr('id',id,html,start,end,before)
   
 def _getTag(html, end, attr):
   start = html.rfind('<',0,end)
@@ -182,12 +196,12 @@ def _getTag(html, end, attr):
         return tag
   return None
 
-def getElementsByClass(className,html,start=None,end=None):
+def getElementsByClass(className,html,start=None,end=None,before=None):
   lst=[]
   s=start
   h=html
   while True:
-    obj = _getElement(None,'class',className,h,s,end)
+    obj = _getElement(None,'class',className,h,s,end,before)
     if(obj and obj[0]):
       lst.append(obj[0])
       h=h[obj[2]:]
@@ -197,12 +211,12 @@ def getElementsByClass(className,html,start=None,end=None):
       break
   return lst
 
-def getElements(tag,attr='class',value=None,html=None,start=None,end=None):
+def getElements(tag,attr='class',value=None,html=None,start=None,end=None,before=None):
   lst=[]
   s=start
   h=html
   while True:
-    obj = _getElement(tag,attr,value,h,s,end)
+    obj = _getElement(tag,attr,value,h,s,end,before)
     if(obj and obj[0]):
       lst.append(obj[0])
       h=h[obj[2]:]
@@ -212,17 +226,17 @@ def getElements(tag,attr='class',value=None,html=None,start=None,end=None):
       break
   return lst
 
-def getElement(tag,attr='class',value=None,html=None,start=None,end=None):
-  obj = _getElement(tag,attr,value,html,start,end)
+def getElement(tag,attr='class',value=None,html=None,start=None,end=None,before=None):
+  obj = _getElement(tag,attr,value,html,start,end,before)
   if(obj):
     return obj[0]
   return None
-def _getElement(tag,attr='class',value=None,html=None,start=None,end=None):
+def _getElement(tag,attr='class',value=None,html=None,start=None,end=None,before=None):
   if(not value or not attr):
-    return _getElementByTag(tag,html,start,end)
+    return _getElementByTag(tag,html,start,end,before)
 
   if(not attr or not value or not html or html.find(value)<0): return None
-  section = getSection(html,start,end)
+  section = getSection(html,start,end,before)
   s = section[0]
   e = section[1]
   if(s < 0 or e < s): return None
@@ -240,14 +254,22 @@ def _getElement(tag,attr='class',value=None,html=None,start=None,end=None):
         continue
       else: break
   if not tag: return None
-
-  strP = u'<[\s]*'+tag+'[^>]+?'+attr+'[=\'"\s]+(|[ \w]+[ ])'+value+'[ \'"][\s\S]*?>[\s\S]*?</'+tag+'>'
+  singleTag = _checkSingleTag(tag)
+  if(singleTag):
+    strP = u'<[\s]*'+tag+'[^>]+?'+attr+'[=\'"\s]+(|[ \w]+[ ])'+value+'[ \'"][\s\S]*?>'
+  else:
+    strP = u'<[\s]*'+tag+'[^>]+?'+attr+'[=\'"\s]+(|[ \w]+[ ])'+value+'[ \'"][\s\S]*?>[\s\S]*?</'+tag+'>'
   pattern = re.compile(strP) 
   m = pattern.search(html)
   if m: 
     dom = m.group(0)
     start = html.find(dom)
     end = start+len(dom)
+    if(singleTag):
+      ele = convert2Dic(dom)
+      ele['innerText']=""
+      ele['text']=""
+      return (ele,start,end)
     tagLen = len(tag)+3
     while True:
       count = _getTagCount(dom,tag)
@@ -289,17 +311,100 @@ def _getTagCount(html,tag):
       count+=1
     i=s
   return count
-def getElementBy(attr,value,html,start=None,end=None):
-  return getElementByAttr(attr,value,html,start,end)
+def getElementBy(attr,value,html,start=None,end=None,before=None):
+  return getElementByAttr(attr,value,html,start,end,before)
 
-def getElementByAttr(attr,value,html,start=None,end=None):
-  return getElement(None,attr=attr,value=value,html=html,start=start,end=end)
+def getElementByAttr(attr,value,html,start=None,end=None,before=None):
+  return getElement(None,attr=attr,value=value,html=html,start=start,end=end,before=before)
 
-def getElementByClass(className,html,start=None,end=None):
-  return getElementByAttr('class',className,html,start,end)
+def getElementByClass(className,html,start=None,end=None,before=None):
+  return getElementByAttr('class',className,html,start,end,before)
 
-def getElementTextByID(id,html,start=None,end=None):
-  return getElementByAttr('id',id,html,start,end)
+def getElementTextByID(id,html,start=None,end=None,before=None):
+  return getElementByAttr('id',id,html,start,end,before)
 
-# def getElementAttrByID(id,attr,html,start=None,end=None):
-#   return getElementByAttr('id',id,html,start,end)
+def getParent(tag=None,attr=None,value=None,html=None,start=None,end=None,before=None):
+  ele = _getElement(tag,attr,value,html,start,end,before)
+  if(ele):
+    start = ele[1]
+    start = _getStart(html,start)
+    end = ele[2]
+    end = _getEnd(html,end)
+    if(start and end):
+      html = html[start:end]
+      e2 = html.find('>')+1
+      ele = convert2Dic(html[0:e2])
+      ele['innerHtml']=(html[e2:len(html)]).strip()
+      innerText = re.compile('<[^>]+?>').sub('',ele['innerHtml'])
+      ele['innerText']=re.sub('(\\s|&nbsp;)+', ' ', innerText.strip(), 0)
+      ele['text']=ele['innerText']
+      return ele
+  return None
+def _getEnd(html,start):
+  s = start
+  startCount=0
+  while(True):
+    s = html.find('<', s)
+    if(s<0): return None
+    if(html[s+1:s+2]!='/'): 
+      if(not _checkSingle(html,s)):
+        startCount+=1
+    else:
+      if(startCount==0):
+        return s
+      startCount -= 1
+    s+=1
+
+def _getStart(html,end):
+  s=0
+  e=end
+  endCount=0
+  while(True):
+    s = html.rfind('<',0,e)
+    if(s<0): return None
+    if(html[s+1:s+2]=='/'): 
+      endCount+=1
+    else:
+      if (not _checkSingle(html,s)):
+        if(endCount==0):
+          return s
+        endCount -= 1
+    e=s-1
+  
+def _checkSingle(html,start=None):
+  end = html.find('>',start)
+  return html[end-1:end]=='/'
+def getChildren(html,tag=None,start=None,end=None,before=None):
+  if(tag):
+    return getElementsByTag(tag,html,start,end,before)
+  else:
+    lst=[]
+    section = getSection(html,start,end,before)
+    if(section[1]<=section[0]):
+      return lst
+    h=html[section[0]:section[1]]
+    s=0
+    while True:
+      tag = _getNextTag(h,s)
+      obj = _getElementByTag(tag,h,s)
+      if(obj and obj[0] and obj[2]>0):
+        lst.append(obj[0])
+        s+=obj[2]
+      else:
+        break
+    return lst
+def _getNextTag(html,start):
+  pattern = re.compile(u'<[\s]*(?P<tag>[a-zA-Z0-9]+?)[/>\s]')
+  tmp = pattern.search(html[start:])
+  if tmp: 
+    return tmp.group("tag")
+  return None
+def getNexts(attr,value,html,tag=None,start=None,end=None,before=None):
+  ele = _getElement(tag,attr,value,html,start,end,before)
+  if(ele):
+    start = ele[2]
+    end = _getEnd(html,start)
+    if(start and end):
+      html = html[start:end]
+      return getChildren(html)
+  return None

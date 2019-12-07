@@ -21,4 +21,10 @@ class _Request():
     ssp = None
     if(saveCookie): ssp=self._ssp_
     return _post(url,data,header,useIp,ssp,timeout,True)
+  def getCookie(self,url):
+    return self._ssp_.getCookie(url)
+  def setCookie(self,url,cookie):
+    self._ssp_.setCookie(url,cookie)
+  def setCookieStore(self,cookieStore):
+    self._ssp_.cookie_store = cookieStore
 req = _Request()

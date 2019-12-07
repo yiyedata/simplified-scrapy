@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #coding=utf-8
-import json,re,importlib,os
+import json,re,importlib,os,sys
 from simplified_scrapy.core.request_helper import extractHtml
 from simplified_scrapy.core.utils import printInfo
 

@@ -19,6 +19,7 @@ except ImportError:
 class _SimplifiedMain():
   def __init__(self):
     try:
+      self.downloadCount=0
       self._runflag = True
       self._settingObj = {}
       self.singleSSP = None
@@ -113,9 +114,12 @@ class _SimplifiedMain():
             url = ssp.popUrl()
             if(url):
               urlFlag = True
-              self._pool.submit(self.downloadThread2,url,ssp)
-              # thread = threading.Thread(target=self.downloadThread, args=(url,ssp))
-              # thread.start()
+              self.downloadCount+=1
+              if(not isinstance(url,str) and url.get("requestMethod")=="render"):
+                self._downloadPageNum+=1
+                ssp.renderUrl(url,self.down_callback)
+              else:
+                self._pool.submit(self.downloadThread2,url,ssp)
             else:
               self._concurrency-=1
           if(urlCount==0):
@@ -234,6 +238,14 @@ class _SimplifiedMain():
       self.log(err,logging.ERROR)
     finally:
       self._concurrency-=1
+  def down_callback(self,html,url,ssp):
+    self._concurrency-=1
+    if(isinstance(url,str)):
+      url={'url':url}
+    if(html=="_error_"):
+      ssp.downloadError(url)
+    elif html:
+      ssp.saveHtml(url,html)
   def downloadThread2(self,*args):
     url=args[0]
     ssp=args[1]
@@ -243,7 +255,11 @@ class _SimplifiedMain():
       if(isinstance(url,str)):
         url={'url':url}
       printInfo(url['url'])
-      self._downloadPageNum=self._downloadPageNum+1
+      self._downloadPageNum+=1
+
+      # if(not isinstance(url,str) and url.get("requestMethod")=="render"):
+      #   ssp.renderUrl(url,self.down_callback)
+      # else:
       html = execDownload(url,ssp)
       if(html=="_error_"):
         ssp.downloadError(url)

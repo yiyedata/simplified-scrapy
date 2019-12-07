@@ -44,7 +44,7 @@ class Spider():
       self.url_store.saveUrl(self.start_urls,0)
       self.listA=listA
       self.listImg=listImg
-      self.getElementAttrByID=getElementAttrByID
+      # self.getElementAttrByID=getElementAttrByID
       self.getElementsByTag=getElementsByTag
       self.getElementByID=getElementByID
       self.getElementsByClass=getElementsByClass
@@ -54,6 +54,9 @@ class Spider():
       self.getElement=getElement
       self.getElements=getElements
       self.getElementByAttr=getElementByAttr
+      self.getParent=getParent
+      self.getChildren=getChildren
+      self.getNexts=getNexts
       self.tm=0
       self.absoluteUrl=absoluteUrl
     except Exception as err:
@@ -101,9 +104,9 @@ class Spider():
       cookie = response.info().get('Set-Cookie')
     self.setCookie(url,cookie)
     return html
-  def renderUrl(self, url):
+  def renderUrl(self, url, callback):
     printInfo('Need to implement method "renderUrl"')
-  def customDown(self, url):
+  def customDown(self, url, callback):
     printInfo('Need to implement method "customDown"')
   def popHtml(self,state=0):
     return self.html_store.popHtml(state)
