@@ -3,19 +3,20 @@ simplified scrapy, A Simple Web Crawle
 # Requirements
 + Python 2.7, 3.0+
 + Works on Linux, Windows, Mac OSX, BSD
-# 运行
-进入项目根目录，执行下面命令  
-`python start.py`
+# run  
+```
+from simplified_scrapy.simplified_main import SimplifiedMain
+SimplifiedMain.startThread()
+```
 # Demo
-项目中爬虫例子，在文件夹spiders下，文件名为demoSpider.py。自定义的爬虫类需要继承Spider类
+Custom crawler class needs to extend Spider class
 ```
 from core.spider import Spider 
 class DemoSpider(Spider):
 ```
-需要给爬虫定义一个名字，配置入口链接地址，与抽取数据用到的解析方法。下面是采集数据的一个例子。
+Here is an example of collecting data
 ```
-from simplified_scrapy.core.spider import Spider 
-from simplified_scrapy.simplified_doc import SimplifiedDoc
+from simplified_scrapy.spider import Spider, SimplifiedDoc
 class DemoSpider(Spider):
   name = 'demo-spider'
   start_urls = ['http://www.scrapyd.cn/']
@@ -29,11 +30,19 @@ from simplified_scrapy.simplified_main import SimplifiedMain
 SimplifiedMain.startThread(DemoSpider())
 ```
 
-# pip安装
+# pip install
 ```
 pip install simplified-scrapy
 ```
 [Examples](https://github.com/yiyedata/simplified-scrapy-demo)
 
+# Legal Issues
+In particular, please be aware that
 
+>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+Translated to human words:
+
+In case your use of the software forms the basis of copyright infringement, or you use the software for any other illegal purposes, the authors cannot take any responsibility for you.
+
+We only ship the code here, and how you are going to use it is left to your own discretion.
