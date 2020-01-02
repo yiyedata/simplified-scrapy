@@ -19,8 +19,8 @@ Here is an example of collecting data
 from simplified_scrapy.spider import Spider, SimplifiedDoc
 class DemoSpider(Spider):
   name = 'demo-spider'
-  start_urls = ['http://www.scrapyd.cn/']
-  allowed_domains = ['www.scrapyd.cn']
+  start_urls = ['http://quotes.toscrape.com/']
+  allowed_domains = ['quotes.toscrape.com']
   def extract(self, url, html, models, modelNames):
     doc = SimplifiedDoc(html)
     lstA = doc.listA(url=url["url"])
