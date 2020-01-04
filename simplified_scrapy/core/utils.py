@@ -19,15 +19,33 @@ def printInfo(*msgs):
 # def printError(addr,err):
 #   printInfo(addr, err.message)
 
-def saveFile(name,text):
-  file = io.open(name, "w",encoding="utf-8")
+def saveFile(name,text,encoding="utf-8"):
+  file = io.open(name, "w",encoding=encoding)
   try:
     file.write(u'{}\n'.format(text))
   except Exception as err:
     printInfo(err,name)
   file.close()
+def getFileContent(name,encoding="utf-8"):
+  file = io.open(name, "r",encoding=encoding)
+  try:
+    return file.read()
+  except Exception as err:
+    printInfo(err,name)
+  finally:
+    file.close()
+def getFileLines(name,encoding="utf-8"):
+  file = io.open(name, "r",encoding=encoding)
+  try:
+    return file.readlines()
+  except Exception as err:
+    printInfo(err,name)
+  finally:
+    file.close()
+
 def getFileInfo(name):
   return os.stat(name)
+
 def getFileModifyTime(name):
   return os.stat(name).st_mtime
 
@@ -36,8 +54,8 @@ def isExistsFile(name):
 def isExistsDir(name):
   return os.path.isdir(name)
 
-def appendFile(name,text):
-  file = io.open(name, "a",encoding="utf-8")
+def appendFile(name,text,encoding="utf-8"):
+  file = io.open(name, "a",encoding=encoding)
   try:
     file.write(u'{}\n'.format(text))
   except Exception as err:
@@ -51,15 +69,17 @@ def convertUrl2Int(url,count=10):
   for c in value:
     myint += ord(c)
   return myint % count
-def md5(text):
+def md5(text,encoding="utf-8"):
   if sys.version_info.major == 2:
     return hashlib.md5(text).hexdigest()
   else:
-    return hashlib.md5(text.encode('utf-8')).hexdigest()
+    return hashlib.md5(text.encode(encoding)).hexdigest()
 def absoluteUrl(baseUrl,url):
   if(not url or url[:7].lower()=="http://" or  url[:8].lower()=="https://"):
     return url
-  url = re.sub('(#)+', '', url, 0)
+  i = url.find('#')
+  if(i>=0):
+    url=url[:i]
   if(not url): 
     return baseUrl
   if(urljoin):

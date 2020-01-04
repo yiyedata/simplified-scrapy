@@ -1,0 +1,11 @@
+{
+  "spiders":[
+    {"file":"spiders.scrapydSpider","class":"ScrapydSpider"}
+  ],
+  "concurrency":1,
+  "concurrencyPer1S":6,
+  "intervalTime":0.3,
+  "max_workers":10,
+  "refresh_tm":100,
+  "disable_extract":false
+}

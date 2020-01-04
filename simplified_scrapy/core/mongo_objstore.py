@@ -24,6 +24,10 @@ class MongoObjStore:
 
   def saveObj(self, data):
     objs = data.get("Datas")
-    if(objs and len(objs)>0):
+    if(objs != None):
+      if(objs):
+        db = self._connect()
+        db[self._tbName].insert(data)
+    elif isinstance(data, dict):
       db = self._connect()
       db[self._tbName].insert(data)

@@ -3,9 +3,8 @@
 import json,re,importlib,os,sys
 from simplified_scrapy.core.request_helper import extractHtml
 from simplified_scrapy.core.utils import printInfo
-
-class Extracter:
-  _models={
+from simplified_scrapy.core.dictex import Dict
+ExtractModel = Dict({
     'auto_all':{
       "Type": 2,
       "UrlDomains": "all_domain"
@@ -28,7 +27,33 @@ class Extracter:
     'auto_obj':{
       "Type": 3
     }
-  }
+  })
+
+class Extracter:
+  # _models={
+  #   'auto_all':{
+  #     "Type": 2,
+  #     "UrlDomains": "all_domain"
+  #   },
+  #   'auto_lst_obj':{
+  #     "Type": 5,
+  #     "MergeUrl": False
+  #   },
+  #   'auto_lst_url':{
+  #     "Type": 4,
+  #     "MergeUrl": False
+  #   },
+  #   'auto_main_2':{
+  #     "Type": 2
+  #   },
+  #   'auto_main':{
+  #     "Type": 2,
+  #     "UrlDomains": "main_domain"
+  #   },
+  #   'auto_obj':{
+  #     "Type": 3
+  #   }
+  # }
   def __init__(self):
     try:
       self._iniModels('models/')
@@ -46,9 +71,9 @@ class Extracter:
         if os.path.isfile(path):
           f = open(path,'r')
           if sys.version_info.major == 2:
-            self._models[name[:-5]] = json.loads(f.read().decode('utf-8'))
+            ExtractModel[name[:-5]] = json.loads(f.read().decode('utf-8'))
           else:
-            self._models[name[:-5]] = json.loads(f.read())
+            ExtractModel[name[:-5]] = json.loads(f.read())
           f.close()
     except Exception as err:
       printInfo(err)
@@ -59,7 +84,7 @@ class Extracter:
     models = []
     if(mds):
       for modelName in mds:
-        m = self._models.get(modelName)
+        m = ExtractModel.get(modelName)
         if(m):
           models.append(m)
         else:
@@ -67,3 +92,4 @@ class Extracter:
 
     return ssp.extract(url,html,models,mds)
 
+# print (ExtractModel.auto_all)

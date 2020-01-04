@@ -77,7 +77,7 @@ class SqliteUrlStore():
   def saveUrl(self, urls,i=None):
     datas=[]
     for url in urls:
-      if(isinstance(url,str)):
+      if(not isinstance(url,dict)):
         id = md5(url)
         url={'url':url}
       else:
@@ -98,7 +98,7 @@ class SqliteUrlStore():
   def resetUrls(self, urls):
     datas=[]
     for url in urls:
-      if(isinstance(url,str)):
+      if(not isinstance(url,dict)):
         id = md5(url)
         url={'url':url}
       else:
@@ -117,7 +117,7 @@ class SqliteUrlStore():
   def updateState(self, url, state):
     conn = sqlite3.connect(self._dbPath)
     try:
-      if(isinstance(url,str)):
+      if(not isinstance(url,dict)):
         id = md5(url)
       else:
         id = md5(url["url"])

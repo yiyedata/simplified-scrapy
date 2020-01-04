@@ -75,7 +75,7 @@ class UrlStore:
     try:
       flag=False
       for url in urls:
-        if(isinstance(url,str)):
+        if(not isinstance(url,dict)):
           url={'url':url}
         if(md5(url['url']) not in self._dic):
           self._urls.append(url)
@@ -102,7 +102,7 @@ class UrlStore:
     try:
       flag=False
       for url in urls:
-        if(isinstance(url,str)):
+        if(not isinstance(url,dict)):
           url={'url':url}
         id=md5(url['url'])
         self._urls.append(url)

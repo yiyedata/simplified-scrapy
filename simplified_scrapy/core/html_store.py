@@ -15,7 +15,7 @@ class HtmlStore:
       os.mkdir(self._htmlPath)
   def saveHtml(self,url,html):
     self._htmls.append({"url":url,"html":html})
-    if(isinstance(url,str)):
+    if(not isinstance(url,dict)):
       self._saveHtml(url,html)
     else:
       self._saveHtml(url["url"],html)

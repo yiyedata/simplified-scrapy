@@ -40,7 +40,7 @@ class SqliteCookieStore:
     if(old):
       self._parseCookie(old,kvs)
 
-    if(isinstance(cookie,str)):
+    if(not isinstance(cookie,list)):
       self._parseCookie(cookie,kvs)
     else:
       for line in cookie:

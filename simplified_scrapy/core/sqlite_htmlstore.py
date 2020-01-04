@@ -36,7 +36,7 @@ class SqliteHtmlStore:
   #   if self._conn: self._conn.close()
 
   def saveHtml(self,url,html):
-    if(isinstance(url,str)):
+    if(not isinstance(url,dict)):
       url={"url":url}
     filename = self._saveHtml(url["url"],html)
     # self._htmls.append({"url":url,"html":html})
@@ -46,8 +46,6 @@ class SqliteHtmlStore:
     conn.close()
 
   def popHtml(self,state=0):
-    # if(len(self._htmls)>0):
-    #   return self._htmls.pop()
     conn = sqlite3.connect(self._dbPath)
     cursor = conn.cursor().execute("select id,json from htmls where state="+str(state)+" limit 0,1")
     for row in cursor:
@@ -58,7 +56,13 @@ class SqliteHtmlStore:
     conn.close()
 
   def _saveHtml(self,url,html):
-    filename = md5(url)+'.htm'
+    suffix = '.htm'
+    index = url.rfind('/')
+    if(index>10):
+      index = url.rfind('.',index)
+      if(index>0 and len(url)-index<10):
+        suffix = url[index:]
+    filename = md5(url)+suffix
     if(not os.path.exists(self._htmlPath)):
       os.mkdir(self._htmlPath)
     file = io.open(self._htmlPath+filename, "w",encoding="utf-8")

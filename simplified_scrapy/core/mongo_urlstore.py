@@ -81,7 +81,7 @@ class MongoUrlStore():
     db = self._connect()
     flag = False
     for url in urls:
-      if(isinstance(url,str)):
+      if(not isinstance(url,dict)):
         id = md5(url)
         url = {'url':url, '_id':id, 'state':0}
       else:
@@ -108,7 +108,7 @@ class MongoUrlStore():
   def resetUrls(self, urls):
     db = self._connect()
     for url in urls:
-      if(isinstance(url,str)):
+      if(not isinstance(url,dict)):
         id = md5(url)
         url={'url':url,'_id':id, 'state':0}
       else:
@@ -122,7 +122,7 @@ class MongoUrlStore():
 
   def updateState(self, url, state):
     db = self._connect()
-    if(isinstance(url,str)):
+    if(not isinstance(url,dict)):
       id = md5(url)
     else:
       id = md5(url["url"])

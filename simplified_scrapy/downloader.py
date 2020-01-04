@@ -5,18 +5,20 @@ from simplified_scrapy.core.request_helper import requestPost,requestGet
 
 # from yiye_common.module_helper import import_module
 def execDownload(url,ssp):
-  headers = url.get('cookie')
+  headers = url.get('header')
   if(not headers):
-    headers = url.get('header')
+    headers = url.get('cookie')
   head=None
   if(headers):
     head=json.loads(headers)
+  if ssp.custom_down:
+    return ssp.customDown(url)
   if(url.get('requestMethod')):
     method = url.get('requestMethod').lower()
     if(method == 'post'):
       return _requestPost(url,ssp,head)
-    elif(method == 'render'):
-      return ssp.renderUrl(url)
+    # elif(method == 'render'):
+    #   return ssp.renderUrl(url)
     elif(method == 'custom'):
       return ssp.customDown(url)
   return _requestGet(url,ssp,head)

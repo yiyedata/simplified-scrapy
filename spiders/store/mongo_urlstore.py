@@ -1,5 +1,6 @@
 #!/usr/bin/python
 #coding=utf-8
+from simplified_scrapy.simplified_doc import SimplifiedDoc
 from pymongo import MongoClient
 import json,hashlib,random,random
 from utils import convert2Int

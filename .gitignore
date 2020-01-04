@@ -5,3 +5,8 @@ obj.json
 .DS_Store
 db/*
 data/*
+build/*
+dist/*
+pyppeteer/*
+simplified_scrapy.egg-info/*
+export_obj2http.py

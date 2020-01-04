@@ -16,9 +16,17 @@ class Spider():
   models = None
   concurrencyPer1s=1
   use_cookie = True
-  use_ip = False#全局设置
+  use_ip = False # globle
   version = "0.0.1"
   request_timeout = None
+  allowed_domains = None
+  excepted_domains = None
+  custom_down = False # globle
+  useragent = None
+  proxyips = None
+  logged_in = False
+  login_data = None
+  refresh_urls = False
   def __init__(self, name=None):
     try:
       if name is not None:
@@ -39,16 +47,15 @@ class Spider():
       if not hasattr(self, "cookie_store"):
         # printInfo('init cookie_store------------------------')
         self.cookie_store = SqliteCookieStore()
-      if not hasattr(self, "login_data"):
-        self.login_data = None
-      self.url_store.saveUrl(self.start_urls,0)
+      if not self.refresh_urls:
+        self.url_store.saveUrl(self.start_urls,0)
+      else:
+        self.url_store.resetUrls(self.start_urls)
       self.listA=listA
       self.listImg=listImg
-      # self.getElementAttrByID=getElementAttrByID
       self.getElementsByTag=getElementsByTag
       self.getElementByID=getElementByID
       self.getElementsByClass=getElementsByClass
-      self.getElementTextByID=getElementTextByID
       self.getElementByTag=getElementByTag
       self.getElementByClass=getElementByClass
       self.getElement=getElement
@@ -57,6 +64,10 @@ class Spider():
       self.getParent=getParent
       self.getChildren=getChildren
       self.getNexts=getNexts
+      self.getSection=getSection
+      self.removeHtml=removeHtml
+      self.trimHtml=trimHtml
+      self.removeScripts=removeScripts
       self.tm=0
       self.absoluteUrl=absoluteUrl
     except Exception as err:
@@ -71,14 +82,15 @@ class Spider():
     if(not obj): obj = self.login_data
     if(obj and obj.get('url')):
       data = obj.get('data')
-      if(data and not isinstance(data,str)): data = json.dumps(data)
+      # if(data and isinstance(data,dict)): 
+      #   data = json.dumps(data)
       if(obj.get('method')=='get'):
         return requestGet(obj.get('url'),obj.get('headers'),obj.get('useProxy'),self)
       else:
         return requestPost(obj.get('url'),data,
           obj.get('headers'),obj.get('useProxy'),self)
     else:
-      return True
+      return False
   def getCookie(self,url):
     if(self.use_cookie and self.cookie_store):
       return self.cookie_store.getCookie(url)
@@ -96,8 +108,8 @@ class Spider():
         request.add_header('Cookie', cookie)
     return request
 
-  def afterResponse(self, response, url):
-    html = getResponseStr(response.read(), url)
+  def afterResponse(self, response, url,error=False):
+    html = getResponseStr(response, url,error)
     if sys.version_info.major == 2:
       cookie = response.info().getheaders('Set-Cookie')
     else:
@@ -106,7 +118,7 @@ class Spider():
     return html
   def renderUrl(self, url, callback):
     printInfo('Need to implement method "renderUrl"')
-  def customDown(self, url, callback):
+  def customDown(self, url):
     printInfo('Need to implement method "customDown"')
   def popHtml(self,state=0):
     return self.html_store.popHtml(state)
@@ -116,18 +128,6 @@ class Spider():
   def updateHtmlState(self,id,state):
     self.html_store.updateState(id,state)
     
-  def removeScripts(self,html):
-    if (not html): return html
-    html = re.compile('<[\s]*script[^>]*>[\s\S]*?</script>').sub('',html)
-    html = re.compile('<[\s]*style[^>]*>[\s\S]*?</style>').sub('',html)
-    html = re.compile('<!--[\s\S]*?-->').sub('',html)
-    html = re.compile('<[\s]*link [\s\S]*?>').sub('',html)
-    html = re.compile('<[\s]*meta [\s\S]*?>').sub('',html)
-    html = re.compile('<[\s]*object[^>]*>[\s\S]*?</object>').sub('',html)
-    html = re.compile('<[\s]*iframe[^>]*>[\s\S]*?</iframe>').sub('',html)
-    html = re.compile('</object>').sub('',html)
-    html = re.compile('<param [\s\S]*?/>').sub('',html)
-    return html
   def downloadError(self,url,err=None):
     printInfo('error url:',url,err)
     self.url_store.updateState(url,2)
@@ -145,6 +145,13 @@ class Spider():
     return True
 
   def urlFilter(self, url):
+    if(self.excepted_domains):
+      for d in self.excepted_domains:
+        if(url.find(d)>-1): return False
+    if(self.allowed_domains):
+      for d in self.allowed_domains:
+        if(url.find(d)>-1): return True
+      return False
     return True
   def _urlFilter(self, urls):
     tmp=[]
@@ -156,15 +163,20 @@ class Spider():
 
   def saveData(self, data):
     if(data):
-      if(isinstance(data,str)): objs = json.loads(data)
+      if(not isinstance(data,list) and not isinstance(data,dict)): objs = json.loads(data)
+      elif isinstance(data,dict):
+        objs = [data]
       else: objs = data
       for obj in objs:
         if(obj.get("Urls")):
-          self.saveUrl(self._urlFilter(obj.get("Urls")))
+          self.saveUrl(obj.get("Urls"))
         ds = obj.get("Data")
         if(ds and len(ds) > 0):
           for d in ds:
-            self.obj_store.saveObj(d)
+            self.saveObj(d)
+            # self.obj_store.saveObj(d)
+  def saveObj(self,data):
+    self.obj_store.saveObj(data)
 
   def extract(self, url,html,models,modelNames):
     if(not modelNames):
@@ -196,6 +208,8 @@ class Spider():
   def urlCount(self):
     return self.url_store.getCount()
   def saveUrl(self, urls):
+    if not isinstance(urls,list): urls=[urls]
+    urls=self._urlFilter(urls)
     self.url_store.saveUrl(urls)
 
   def plan(self):
