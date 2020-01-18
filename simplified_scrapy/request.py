@@ -21,6 +21,8 @@ class _Request():
     ssp = None
     if(saveCookie): ssp=self._ssp_
     return _post(url,data,header,useIp,ssp,timeout,True)
+  def setEncoding(self,encodings):
+    self._ssp_.encodings=encodings
   def getCookie(self,url):
     return self._ssp_.getCookie(url)
   def setCookie(self,url,cookie):

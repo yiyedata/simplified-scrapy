@@ -47,8 +47,9 @@ class _SimplifiedMain():
         if(not self.singleSSP and settingObj.get('spiders')):
           for spider in settingObj['spiders']:
             try:
-              dicTmp.append(spider['file'])
-              self.getSpider(spider['file'],spider["class"])
+              if not spider.get('stop'):
+                dicTmp.append(spider['file'])
+                self.getSpider(spider['file'],spider["class"])
             except Exception as err:
               self.log(err,logging.ERROR)
 
@@ -117,7 +118,7 @@ class _SimplifiedMain():
           break
         urlFlag = False
         for ssp in self._spiderDic.values():
-          if(not ssp): continue
+          if(not ssp or ssp.stop): continue
           urlCount = ssp.urlCount()
           if(self.checkConcurrency(ssp.name,urlCount)):
             url = ssp.popUrl()

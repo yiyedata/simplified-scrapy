@@ -50,7 +50,7 @@ def listA(html,baseUrl=None,start=None,end=None,before=None):
   patternLst = re.compile(u'<a[\s]+[^>]*>[\s\S]*?</a>')
   patternUrl = re.compile(u'href[\s=]+[\'"](?P<url>.*?)[\'"]') 
   patternTitle1 = re.compile(u'title[\s=]+[\'"](?P<title>.*?)[\'"]')
-  patternTitle2 = re.compile(u'<a[^>]*>(?P<title>.*?)</a>')
+  patternTitle2 = re.compile(u'<a[\s]+[^>]*>(?P<title>.*?)</a>')
 
   strA = patternLst.findall(html)
   dic = Dict()
@@ -93,6 +93,42 @@ def listA(html,baseUrl=None,start=None,end=None,before=None):
       printInfo(ex)
     
   return list(dic.values())
+
+def getListByReg(html,regex,group=0,start=None,end=None,before=None):
+  if(not html or not regex): return []
+  section = getSection(html,start,end,before)
+  s = section[0]
+  e = section[1]
+  if(s < 0 or e < s): return []
+  html = html[s:e]
+  if not group:
+    patternLst = re.compile(regex)
+    strs = patternLst.findall(html)
+  else:
+    strs = []
+    while s>=0:
+      block = getOneByReg(html,regex,group)
+      if block:
+        strs.append(block)
+        s=html.find(block)+len(block)
+        html=html[s:]
+      else:
+        break
+  return strs
+
+def getOneByReg(html,regex,group=0,start=None,end=None,before=None):
+  if(not html or not regex): return None
+  section = getSection(html,start,end,before)
+  s = section[0]
+  e = section[1]
+  if(s < 0 or e < s): return None
+  html = html[s:e]
+  patternLst = re.compile(regex)
+  tmp = patternLst.search(html)
+  if tmp:
+    return tmp.group(group)
+  return None
+
 def listImg(html,baseUrl=None,start=None,end=None,before=None):
   if(not html or html.find("<img")<0): return []
   section = getSection(html,start,end,before)
@@ -145,9 +181,17 @@ def listImg(html,baseUrl=None,start=None,end=None,before=None):
     
   return list(dic.values())
 def preDealHtml(html):
-  html = re.compile('<\s+').sub('<',html)
-  html = re.compile('>\s+').sub('>',html)
+  # html = re.compile('<[\n]+').sub('<',html)
+  html = re.compile('[\s]*>[\s]*').sub('>',html)
+  html = re.compile('[\s]*<[\s]*').sub('<',html) # script?
+  html = re.compile('[\s]*/>').sub(' />',html) # script?
+  # html = re.compile('<[\S]+([\s]+)').sub(_replaceHtml,html) # script?
+  html = re.compile('<[^>]+>').sub(_replaceHtml,html) # script?
   return html
+def _replaceHtml(value):
+  # return value.group().strip()+' '
+  return re.compile('[\s]+').sub(' ',value.group())
+
 def removeScripts(html):
   if (not html): return html
   html = re.compile('<!--[\s\S]*?-->').sub('',html)
@@ -186,6 +230,9 @@ def _checkSingleTag(tag,html=None,i=0):
   if tag.lower() in tags: return True
   if not html: return False
   index1 = html.find('<'+tag+' ',i)
+  if index1<0: 
+    index1 = html.find('<'+tag+'/>',i)
+    if index1>=0: return True
   index2 = html.find('<'+tag+'>',i)
   if index2>-1 and index2<index1: return False
   if index1<0:
@@ -221,9 +268,9 @@ def _getElementByTag(tag,html,start=None,end=None,before=None):
   if isinstance(tag,list) or html.find('<'+tag)<0: return None
   singleTag = _checkSingleTag(tag, html)
   if(singleTag):
-    pattern = re.compile(u'<'+_dealRegChar(tag)+'[^>]*?>') 
+    pattern = re.compile(u'<'+_dealRegChar(tag)+'([\s]+|)[^>]*?>') 
   else:
-    pattern = re.compile(u'<[\s]*'+_dealRegChar(tag)+'[^>]*?>[\s\S]*?</'+_dealRegChar(tag)+'>') 
+    pattern = re.compile(u'<'+_dealRegChar(tag)+'([\s]+[^>]*?>|>)[\s\S]*?</'+_dealRegChar(tag)+'>') 
   m = pattern.search(html)
   if m: 
     dom = m.group(0)
@@ -260,14 +307,17 @@ def _getElementByTag(tag,html,start=None,end=None,before=None):
     ele._end=end+s
     return (ele,start,end)
   return None
-def removeHtml(html,replace=''):
+def removeHtml(html,replace='',tags=None):
   if not html: return html
   innerText = re.compile('<!--[\s\S]*?-->').sub('',html)
+  if not tags:
+    tags = ['br','p']
   while innerText.find('>')>=0:
+    text = innerText
     if replace:
-      text = re.compile('<[^<>]*?>').sub('_yazz_',innerText)
-    else:
-      text = re.compile('<[^<>]*?>').sub(replace,innerText)
+      for tag in tags:
+        text = re.compile('<[/]*'+tag+'[^<>]*?>').sub('_yazz_',text)
+    text = re.compile('<[^<>]*?>').sub('',text)
     if text == innerText:
       break
     innerText = text
@@ -311,7 +361,7 @@ def _getTag(html, end, attr, start=None):
   if(start >= 0 and end-start<300):
     if(attr and html[start:end].find(attr)<0):
       return None
-    pattern = re.compile(u'<[\s]*?(?P<tag>[\S]*?)[\s/>]')
+    pattern = re.compile(u'<?(?P<tag>[\S]*?)[\s/>]')
     html = html[start:end]
     tmp = pattern.search(html)
     if tmp: 
@@ -386,12 +436,29 @@ def _getElement(tag,attr='class',value=None,html=None,start=None,end=None,before
           continue
         else: break
     if not tag: return None
+    if isinstance(tag,list):
+      tags = tag
+      index = len(html)
+      for t in tags:
+        tmp1 = html.find('<'+t +' ')
+        tmp2 = html.find('<'+t +'>')
+        if tmp1>=0 and tmp2>=0:
+          if index>min(tmp1,tmp2):
+            tag = t
+            index = min(tmp1,tmp2)
+        elif tmp1>=0 and tmp1<index:
+          tag = t
+          index = tmp1
+        elif tmp2>=0 and tmp2<index:
+          tag = t
+          index = tmp2
+    if isinstance(tag,list) or html.find('<'+tag)<0: return None
     singleTag = _checkSingleTag(tag,html,index)
     value = _dealRegChar(value)
     if(singleTag):
-      strP = u'<[\s]*'+_dealRegChar(tag)+'[^>]+?'+_dealRegChar(attr)+'[=\'"\s]+(|[ \w]+[ ])'+value+'[ \'"][\s\S]*?>'
+      strP = u'<'+_dealRegChar(tag)+'[\s]+[^>]*?'+_dealRegChar(attr)+'[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)'+value+'[\s\'"][\s\S]*?>'
     else:
-      strP = u'<[\s]*'+_dealRegChar(tag)+'[^>]+?'+_dealRegChar(attr)+'[=\'"\s]+(|[ \w]+[ ])'+value+'[ \'"][\s\S]*?>[\s\S]*?</'+_dealRegChar(tag)+'>'
+      strP = u'<'+_dealRegChar(tag)+'[\s]+[^>]*?'+_dealRegChar(attr)+'[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)'+value+'[\s\'"][\s\S]*?>[\s\S]*?</'+_dealRegChar(tag)+'>'
     pattern = re.compile(strP) 
     m = pattern.search(html)
     if m: 
@@ -458,22 +525,14 @@ def getElementByReg(regex, tag=None, html=None,start=None,end=None,before=None):
   e = section[1]
   if(s < 0 or e < s): return None
   html = html[s:e]
-  start = 0
-  while True:
-    start = _getStartByReg(regex,html,start) # html.find(text,start)
-    if start<0: return None
-    l = html.rfind('<',0,start)
-    r = html.find('<',start)
-    rr = html.find('>',start,r)
-    if html.find('>',l,start)>0 and rr<0:
-      break
-    start = rr
+  start = _getStartByReg(regex,html,0) # html.find(text,start)
+  if start<0: return None
+  start = html.rfind('<',0,start)
 
   if not tag: tag=''
   selectStr = '<'+tag
-  start = html.rfind(selectStr,0,start)
+  start = html.rfind(selectStr,0,start+len(selectStr))
   end = html.find('>',start)+1
-
   tagLeft=html[start:end]
   if not tag:
     tag = _getTag(tagLeft,len(tagLeft),None,0)
@@ -770,5 +829,6 @@ def getPrevious4Ele(html,ele,tag=None):
   return []
 
 if __name__=='__main__':
-  html = '<asd>qwe</asd>'
-  print (_checkSingle(html,0))
+  html = '''<asd asss> 
+   qwe</asd>'''
+  print (_getTag(preDealHtml(html),html.find('>'),None))

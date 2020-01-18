@@ -90,6 +90,6 @@ class Extracter:
         else:
           printInfo('no model ' + modelName)
 
-    return ssp.extract(url,html,models,mds)
+    return ssp.extract(Dict(url),html,models,mds)
 
 # print (ExtractModel.auto_all)

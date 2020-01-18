@@ -176,6 +176,18 @@ class SimplifiedDoc(RegexDict):
   def getSection(self,html=None,start=None,end=None,before=None):
     return self._getSection(html,start,end,before)[0]
 
+  def getSectionByReg(self,regex,html=None,group=0,start=None,end=None,before=None):
+    if html: html = preDealHtml(html)
+    if(not html): html=self.html
+    if(not html and self.last):html=self.last.innerHtml
+    return getOneByReg(html,regex,group,start,end,before)
+
+  def getSectionsByReg(self,regex,html=None,group=0,start=None,end=None,before=None):
+    if html: html = preDealHtml(html)
+    if(not html): html=self.html
+    if(not html and self.last):html=self.last.innerHtml
+    return getListByReg(html,regex,group,start,end,before)
+
   def _getSection(self,html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
@@ -194,14 +206,22 @@ class SimplifiedDoc(RegexDict):
       el=0
     return (html[s+l:e],s,e+el)
     
-  def removeHtml(self,html,replace=''):
-    return removeHtml(html,replace)
+  def removeHtml(self,html,separator='',tags=None):
+    return removeHtml(html,separator,tags)
 
   def trimHtml(self,html):
     return trimHtml(html)
 
   def replaceReg(self,html,regex,new):
-    return replaceReg(html,regex,new)
+    if html:
+      return replaceReg(html,regex,new)
+    elif self.html:
+      self['html'] = replaceReg(self.html,regex,new)
+      return self.html
+    elif self.last:
+      self.last['html']=replaceReg(self.last.html,regex,new)
+      return self.last.html
+    return html
 
   def absoluteUrl(self,baseUrl,url):
     return absoluteUrl(baseUrl,url)

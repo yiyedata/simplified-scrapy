@@ -19,14 +19,16 @@ class Spider():
   use_ip = False # globle
   version = "0.0.1"
   request_timeout = None
-  allowed_domains = None
-  excepted_domains = None
+  allowed_domains = []
+  excepted_domains = []
   custom_down = False # globle
   useragent = None
   proxyips = None
   logged_in = False
   login_data = None
   refresh_urls = False
+  stop = False
+  encodings = {}
   def __init__(self, name=None):
     try:
       if name is not None:
@@ -109,7 +111,7 @@ class Spider():
     return request
 
   def afterResponse(self, response, url,error=False):
-    html = getResponseStr(response, url,error)
+    html = getResponseStr(response, url,self,error)
     if sys.version_info.major == 2:
       cookie = response.info().getheaders('Set-Cookie')
     else:

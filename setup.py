@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="simplified_scrapy",
-    version="0.7.89",
+    version="0.7.90",
     author="yiyedata",
     author_email="3095069599@qq.com",
     description="A Simple Distributed Web Crawle",
@@ -17,10 +17,6 @@ setuptools.setup(
     packages=setuptools.find_packages(include=["simplified_scrapy","simplified_scrapy.core",
         "simplified_html"
     ]),
-    # packages=setuptools.find_packages(exclude=[".spiders",".spiders.","spiders","spiders.",
-    #     ".pyppeteer",".pyppeteer.","pyppeteer","pyppeteer.",
-    #     ".redis",".redis.","redis","redis."
-    # ]),
     include_package_data=True,    # 自动打包文件夹内所有数据
     zip_safe=True,                # 设定项目包为安全，不用每次都检测其安全性
     classifiers=[

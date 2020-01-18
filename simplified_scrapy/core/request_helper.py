@@ -16,6 +16,16 @@ try:
   import spider_resource
 except ImportError:
   spider_resource = None
+try:
+  from setting import extract_api_url,extract_api_key
+except ImportError:
+  extract_api_url = 'http://www.yiyedata.com/api/extracts'
+  extract_api_key = 'yiyedata_python'
+
+try:
+  from setting import encodings as setting_encodings
+except ImportError:
+  setting_encodings={}
 
 class RequestError(Exception):
     def __init__(self,ErrorInfo,url=None):
@@ -56,6 +66,7 @@ _jsonHeaderPost={
   'Accept':_acceptJson,
   'Content-Type': _contentTypeJson
 }
+_cache_encodings={}
 def _getMaintype(res):
   if sys.version_info.major == 2:
     maintype = res.headers.maintype
@@ -113,7 +124,7 @@ def requestPost(url, data, headers=None, useIp=False, ssp=None,timeout=30,error=
         return ssp.afterResponse(response,url,error)
       else:
         return ssp.afterResponse(response,url)
-    return getResponseStr(response,url,error)
+    return getResponseStr(response,url,ssp,error)
   except Exception as err:
     if(not error):
       log(err,url)
@@ -124,21 +135,45 @@ def requestPost(url, data, headers=None, useIp=False, ssp=None,timeout=30,error=
       response.close()
   return "_error_"
 
-def getResponseStr(res,url,error=False):
+def getResponseStr(res,url,ssp=None,error=False):
   html="_error_"
   if(not _checkMaintype(_getMaintype(res))):
     return res
   htmSource = res.read()
+  domain = url.split('/')[2]
+  try:
+    if _cache_encodings.get(domain):
+      return htmSource.decode(_cache_encodings.get(domain))
+    if ssp and ssp.encodings and ssp.encodings.get(domain):
+      return htmSource.decode(ssp.encodings.get(domain))
+    if setting_encodings.get(domain):
+      return htmSource.decode(setting_encodings.get(domain))
+  except:
+    pass
   try:
     html=htmSource.decode("utf-8")
+    _cache_encodings[domain]="utf-8"
   except:
     try:
       html=htmSource.decode("gb18030")
-    except Exception as err:
-      if(not error):
-        log(err.reason or err.message,url)
-      else:
-        return res
+      _cache_encodings[domain]="gb18030"
+    except:
+      try:
+        html=htmSource.decode("ISO-8859-1")
+        _cache_encodings[domain]="ISO-8859-1"
+      except:
+        try:
+          html=htmSource.decode("ASCII")
+          _cache_encodings[domain]="ASCII"
+        except:
+          try:
+            html=htmSource.decode("Unicode")
+            _cache_encodings[domain]="Unicode"
+          except Exception as err:
+            if(not error):
+              log(err.reason or err.message,url)
+            else:
+              return res
       # try:
       #   html=str(htmSource).decode("string_escape")
       # except Exception as err:
@@ -206,7 +241,7 @@ def requestGet(url, headers, useIp, ssp=None,timeout=30,error=False):
       else:
         data = ssp.afterResponse(response,url)
     else: 
-      data = getResponseStr(response,url,error)
+      data = getResponseStr(response,url,ssp,error)
     return data
   except Exception as err:
     if(not error):
@@ -224,34 +259,14 @@ def extractHtml(url,html,model,modelName,title=None):
     'title':title,
     'html':html,
     'model':json.dumps(model),
-    'key':"yiyedata_test" 
+    'key':extract_api_key
   }
   if(modelName): 
     data['modelName']=json.dumps(modelName)
   
   # data = json.dumps(data)
-  obj = requestPost('http://www.yiyedata.com/api/extracts',data)
+  obj = requestPost(extract_api_url,data)
   return obj#.decode("UTF-8").encode(type)
 
-def test():
-  printInfo('start')
-  user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'# 将user_agent写入头信息 
-  headers = { 'User-Agent' : user_agent, "Content-Type": "application/json",#"Content-Length":len(data), 
-    "Referer":"http://47.92.87.212:8080/yiye.mgt/view/login.jsp"
-  } 
-  obj={
-    'url':'http://health.sina.com.cn/',
-    'title':'北京冬奥会世界新闻机构会议在京举办',
-    'html':"",  
-    'modelName':'["auto_obj","auto_url"]',
-    'model':'[{"Type":3},{"Type":2,"UrlDomains": "all_domain"}]',
-    'key':"yiyedata_test" 
-  }
-  data = json.dumps(obj)
-  # data = urllib.urlencode(values)  
-  printInfo(requestPost('http://www.yiyedata.com/api/extracts',data,headers,None))
-# test()
 # model=['{"Type":2}','{"Type":3}']
 # print json.dumps(model)
-
-# print (requestGet('https://blog.csdn.net',None,None,timeout=30))

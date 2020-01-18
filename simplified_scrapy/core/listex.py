@@ -8,10 +8,13 @@ class List(list):
         flag = l.contains(value,attr)
         if flag: tmp.append(l)
     return tmp
-    # for t in tmp:
-    #   self.remove(t)
-    # return self
-
+  def containsOr(self, value, attr='html'):
+    tmp=List()
+    for l in self:
+      if hasattr(l, 'containsOr'):
+        flag = l.containsOr(value,attr)
+        if flag: tmp.append(l)
+    return tmp
   def notContains(self, value, attr='html'):
     tmp=List()
     for l in self:
@@ -19,9 +22,6 @@ class List(list):
         flag = l.notContains(value,attr)
         if flag: tmp.append(l)
     return tmp
-    # for t in tmp:
-    #   self.remove(t)
-    # return self
 
   def containsReg(self, value, attr='html'):
     tmp=[]
