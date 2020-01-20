@@ -150,6 +150,21 @@ class RegexDict(Dict):
     return self._convert2lst(eles,s=s)
   def getText(self,separator='',tags=None):
     return removeHtml(self.get('html'),separator,tags)
+  def nextText(self):
+    if not self._rootNode or not self._rootNode.html:
+      return ''
+    start = self._end
+    s = start
+    html = self._rootNode.html
+    while True:
+      end = html.find('<',s)
+      r = html.find('>',s)
+      if end<0 or r<0:
+        return html[start:]
+      m = html[end+1:r].find('<')
+      if m<0:
+        return html[start:end]
+      s += m
     
   def trimHtml(self):
     if(not self.html): return None
