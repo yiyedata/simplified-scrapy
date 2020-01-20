@@ -214,7 +214,7 @@ class RegexDict(Dict):
     ele=None
     _ele=self
     for v in values:
-      if v.strip()[:5]=='text(':
+      if v.find('(')>0 and v.strip()[-1]==')':
         return _selectText(_ele,v,start,end,before)
       tag,attr,value = _getParas(v.strip())
       ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
@@ -229,7 +229,7 @@ class RegexDict(Dict):
     N = len(values)
     ele=None
     _ele=self
-    if values[-1].strip()[0:5]=='text(':
+    if values[-1].find('(')>0 and values[-1].strip()[-1]==')':
       N-=1
     for i in range(0,N-1):
       v = values[i]
@@ -245,28 +245,31 @@ class RegexDict(Dict):
     if N<len(values):
       eles = [_selectText(e,values[-1]) for e in eles]
     return eles
-
+def _getValue(_ele,attr):
+  if attr in ['text','innerText']: return _ele.text
+  elif attr in ['innerHtml']: return _ele.html
+  else: return _ele[attr]
 def _selectText(_ele,value,start=None,end=None,before=None):
   v = value.strip()
-  if v[:5]=='text()':
-    return _ele.text
-  elif v[:5]=='text(':
-    paras = v[5:-1].split(',')
+  index = v.find('(')
+  _attr = v[:index]
+  p = v[index+1:-1].strip()
+  if not p:
+    return _getValue(_ele,_attr)
+  else:
+    paras = p.split(',')
     if len(paras)==1:
-      if not paras[0].strip():
-        return _ele.text
-      else:
-        tag,attr,value = _getParas(paras[0].strip())
-        ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
-        if ele: return ele.text
-        else: return None
+      tag,attr,value = _getParas(paras[0].strip())
+      ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
+      if ele: return _getValue(ele,_attr)
+      else: return None
     else:
       obj = []
       for para in paras:
         tag,attr,value = _getParas(para.strip())
         ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
         start = end = before = None
-        obj.append(ele.text if ele else None)
+        obj.append(_getValue(ele,_attr) if ele else None)
       return obj
 def _getParas(value):
   paras = re.split("(\.|#|@)",value)

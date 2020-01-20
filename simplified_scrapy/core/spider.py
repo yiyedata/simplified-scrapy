@@ -202,7 +202,6 @@ class Spider():
   def popUrl(self):
     if(self.checkConcurrency()):
       url = self.url_store.popUrl()
-      #暂时加进来，运行一段时间后去掉
       return url
     else:
       printInfo('Downloads are too frequent')

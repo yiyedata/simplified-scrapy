@@ -620,6 +620,7 @@ def _getParentEnd(html,start,tag):
 def _getParentStart(html,end,tag):
   start = end
   s = end
+  dicTag=Dict()
   if not tag:
     while True:
       if s<0: return None
@@ -629,8 +630,20 @@ def _getParentStart(html,end,tag):
       tagHtml = html[l:r+1]
       if tagHtml[1]=='/': 
         s = l
+        tmpTag = tagHtml[2:-1]
+        if not dicTag[tmpTag]:
+          dicTag[tmpTag]=1
+        else:
+          dicTag[tmpTag]=dicTag[tmpTag]+1
         continue
       tag = _getTag(tagHtml,r-l+1,None,0)
+      if len(dicTag)>0:
+        if dicTag[tag]:
+          dicTag[tag]=dicTag[tag]-1
+          if not dicTag[tag]:
+            del dicTag[tag]
+        s = l
+        continue
       if not tag: return None
       if _checkSingle(tagHtml,0):
         start = html.rfind('<'+tag,0,start)

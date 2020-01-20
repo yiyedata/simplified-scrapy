@@ -10,8 +10,6 @@ class Dict(dict):
     else:
       return None
 
-  # 赋值时没法区分成员变量和字典值
-  # 先判断是否有成员变量
   # def __setattr__(self, key, value):
   #   self[key] = value
 

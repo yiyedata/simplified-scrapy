@@ -126,7 +126,3 @@ def convert2Dic(html):
     except Exception as err:
       printInfo(err)
   return None
-
-# print (convert2Dic('''
-# <input value="外双引号内单引号-OK" type="button" οnclick="alert('OK');" >
-# '''))
