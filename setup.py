@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="simplified_scrapy",
-    version="0.7.90",
+    version="0.9.103",
     author="yiyedata",
     author_email="3095069599@qq.com",
     description="A Simple Distributed Web Crawle",

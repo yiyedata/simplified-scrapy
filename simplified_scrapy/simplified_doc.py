@@ -55,6 +55,22 @@ class SimplifiedDoc(RegexDict):
     self.last = getElementByReg(regex,tag,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
+  def getElementsByReg(self, regex, tag=None, html=None,start=None,end=None,before=None):
+    if(not html):html=self.html
+    if(not html and self.last):html=self.last.innerHtml
+    lst=List()
+    ele = getElementByReg(regex,tag,html,start,end,before)
+    ele = RegexDictNew(ele,root=self)
+    while ele:
+      lst.append(ele)
+      s = ele._end
+      ele = getElementByReg(regex,tag,html,s,end)
+      if not ele: break
+      ele = RegexDictNew(ele,root=self,s=s)
+      if ele._end>=len(html):
+        break
+
+    return lst
 
   def getElementByTag(self, tag, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)

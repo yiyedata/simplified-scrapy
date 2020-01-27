@@ -523,7 +523,7 @@ def getElementByReg(regex, tag=None, html=None,start=None,end=None,before=None):
   section = getSection(html,start,end,before)
   s = section[0]
   e = section[1]
-  if(s < 0 or e < s): return None
+  if(s < 0 or e < s or s==e): return None
   html = html[s:e]
   start = _getStartByReg(regex,html,0) # html.find(text,start)
   if start<0: return None
