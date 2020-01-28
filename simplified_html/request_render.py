@@ -33,7 +33,7 @@ class _RequestRenderAsync():
     #   print(res.request.url)
   async def afterNewPage(self,page):
     pass
-  async def _get(self,url,js=None):
+  async def _get(self,url,js=None,delay=0):
     browser = await self.browser()
     page = await browser.newPage()
     await self.afterNewPage(page)
@@ -46,6 +46,8 @@ class _RequestRenderAsync():
     else:
       await page.evaluate(
           '''() =>{Object.defineProperties(navigator,{ webdriver:{ get: () => false } }) }''')
+    if delay:
+      await page.waitFor(delay)
     doc = await page.content()
     cookies = await page.cookies()
     await page.close()
@@ -100,7 +102,7 @@ class RequestRender():
     else:
       await page.evaluate(
           '''() =>{Object.defineProperties(navigator,{ webdriver:{ get: () => false } }) }''')
-  async def _get(self,url,options=None,js=None):
+  async def _get(self,url,options=None,js=None,delay=0):
     browser = await self.__browser()
     page = await browser.newPage()
     await self.afterNewPage(page)
@@ -109,6 +111,8 @@ class RequestRender():
       del options['waitForNavigation']
       await page.waitForNavigation(options)
     await self.afterGoto(page,js)
+    if delay:
+      await page.waitFor(delay)
     doc = await page.content()
     cookies = await page.cookies()
     # print (cookies)
@@ -119,30 +123,30 @@ class RequestRender():
     if hasattr(self, "_browser"):
       await self._browser.close()
 
-  def get(self,url,callback,options=None,extr_data=None,js=None):
+  def get(self,url,callback,options=None,extr_data=None,js=None,selectorOrFunctionOrTimeout=0):
     # try:
-     asyncio.get_event_loop().run_until_complete(self._getContent(url,callback,options,extr_data,js))
+     asyncio.get_event_loop().run_until_complete(self._getContent(url,callback,options,extr_data,js,selectorOrFunctionOrTimeout))
     # except Exception as err:
     #   print (err)
-  def getCookies(self,url,callback,options=None,extr_data=None,js=None):
+  def getCookies(self,url,callback,options=None,extr_data=None,js=None,selectorOrFunctionOrTimeout=0):
     try:
-      asyncio.get_event_loop().run_until_complete(self._getCookies(url,callback,options,extr_data,js))
+      asyncio.get_event_loop().run_until_complete(self._getCookies(url,callback,options,extr_data,js,selectorOrFunctionOrTimeout))
     except Exception as err:
       print (err)
 
-  async def _getAsync(self,url,options=None,js=None):
+  async def _getAsync(self,url,options=None,js=None,delay=0):
     u=url
     if(isinstance(url,dict)):
       u=url.get('url')
     await self.__browser()
-    res = await self._get(u,options,js)
+    res = await self._get(u,options,js,delay)
     return res
-  async def _getContent(self,url,callback,options=None,extr_data=None,js=None):
+  async def _getContent(self,url,callback,options=None,extr_data=None,js=None,delay=0):
     res = await self._getAsync(url,options,js)
     if(callback):
       callback(res[0],url,extr_data)
     return res[0]
-  async def _getCookies(self,url,callback,options=None,extr_data=None,js=None):
+  async def _getCookies(self,url,callback,options=None,extr_data=None,js=None,delay=0):
     res = await self._getAsync(url,options,js)
     cookies = []
     for cookie in res[1]:

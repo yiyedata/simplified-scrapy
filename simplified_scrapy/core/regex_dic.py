@@ -224,30 +224,53 @@ class RegexDict(Dict):
   def getSectionsByReg(self,regex,group=0,start=None,end=None,before=None):
     return getListByReg(self.html,regex,group,start,end,before)
   def select(self,value,start=None,end=None,before=None):
-    if value == None: return None
-    values = value.split('>')
-    ele=None
-    _ele=self
-    for v in values:
-      if v.find('(')>0 and v.strip()[-1]==')':
-        return _selectText(_ele,v,start,end,before)
-      tag,attr,value = _getParas(v.strip())
-      ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
-      start = end = before = None
-      _ele = ele
-      if not _ele:
-        return None
-    return ele
+    return _select(self,value,start,end,before)
+    # if value == None: return None
+    # s = value.find('(')
+    # tp = None
+    # if s>0:
+    #   s = value.rfind('>',0,s)
+    #   if s>0:
+    #     tp = value[s+1:]
+    #     value = value[0:s]
+    #   else:
+    #     tp = value
+    #     value=''
+    # values = value.split('>')
+    # ele=None
+    # _ele=self
+    # for v in values:
+    #   if not v: continue
+    #   tag,attr,value = _getParas(v.strip())
+    #   ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
+    #   start = end = before = None
+    #   _ele = ele
+    #   if not _ele:
+    #     return None
+    # if tp:
+    #   return _selectText(_ele,tp,start,end,before)
+    # return ele
   def selects(self,value,start=None,end=None,before=None):
     if value == None: return List()
+    s = value.find('(')
+    tp = None
+    if s>0:
+      s = value.rfind('>',0,s)
+      if s>0:
+        tp = value[s+1:]
+        value = value[0:s]
+      else:
+        tp = value
+        value=''
     values = value.split('>')
     N = len(values)
     ele=None
     _ele=self
-    if values[-1].find('(')>0 and values[-1].strip()[-1]==')':
-      N-=1
+    # if values[-1].find('(')>0 and values[-1].strip()[-1]==')':
+    #   N-=1
     for i in range(0,N-1):
       v = values[i]
+      if not v: continue
       tag,attr,value = _getParas(v.strip())
       ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
       _ele = ele
@@ -257,35 +280,82 @@ class RegexDict(Dict):
     tag,attr,value = _getParas(values[N-1])
     eles = _ele.getElements(tag,attr,value,start=start,end=end,before=before)
     start = end = before = None
-    if N<len(values):
-      eles = [_selectText(e,values[-1]) for e in eles]
+    if tp:
+      eles = [_selectText(e,tp) for e in eles]
     return eles
 def _getValue(_ele,attr):
   if attr in ['text','innerText']: return _ele.text
   elif attr in ['innerHtml']: return _ele.html
   else: return _ele[attr]
+def _select(_self,value,start=None,end=None,before=None):
+  if value == None: return None
+  s = value.find('(')
+  tp = None
+  if s>0:
+    s = value.rfind('>',0,s)
+    if s>0:
+      tp = value[s+1:]
+      value = value[0:s]
+    else:
+      tp = value
+      value=''
+  values = value.split('>')
+  ele=None
+  _ele=_self
+  for v in values:
+    if not v: continue
+    tag,attr,value = _getParas(v.strip())
+    ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
+    start = end = before = None
+    _ele = ele
+    if not _ele:
+      return None
+  if tp:
+    return _selectText(_ele,tp,start,end,before)
+  return ele
 def _selectText(_ele,value,start=None,end=None,before=None):
   v = value.strip()
-  index = v.find('(')
-  _attr = v[:index]
-  p = v[index+1:-1].strip()
-  if not p:
-    return _getValue(_ele,_attr)
-  else:
-    paras = p.split(',')
-    if len(paras)==1:
-      tag,attr,value = _getParas(paras[0].strip())
-      ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
-      if ele: return _getValue(ele,_attr)
-      else: return None
+  obj = []
+  s = 0
+  while True:
+    index = v.find('(',s)
+    if index<0:
+      break
+    _attr = v[s:index]
+    if not _attr: _attr='text'
+    e = v.find(')',index)
+    t = v.find('(',index+1)
+    if t>index and t<e:
+      s = index+1
+      continue
+    p = v[index+1:e].strip()
+    if not p:
+      if _attr.find('>')<0:
+        obj.append(_getValue(_ele,_attr))
+      else:
+        objs=_select(_ele,_attr+'()')
+        if isinstance(objs, list):
+          for o in objs: obj.append(o)
+        else:
+          obj.append(objs)
     else:
-      obj = []
-      for para in paras:
-        tag,attr,value = _getParas(para.strip())
+      paras = p.split(',')
+      if len(paras)==1:
+        tag,attr,value = _getParas(paras[0].strip())
         ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
-        start = end = before = None
-        obj.append(_getValue(ele,_attr) if ele else None)
-      return obj
+        if ele: obj.append(_getValue(ele,_attr))
+        else: obj.append(None)
+      else:
+        for para in paras:
+          tag,attr,value = _getParas(para.strip())
+          ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
+          start = end = before = None
+          obj.append(_getValue(ele,_attr) if ele else None)
+    
+    s = v.find(',',e)+1
+    if s==0: break
+  if len(obj)==1: return obj[0]
+  return obj
 def _getParas(value):
   paras = re.split("(\.|#|@)",value)
   if not paras[0]: del paras[0]

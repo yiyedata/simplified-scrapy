@@ -9,9 +9,12 @@ class _MemSpider(Spider):
   def __init__(self, name=None):
     self.cookie_store = _store()
 
-class _Request():
-  def __init__(self):
-    self._ssp_ = _MemSpider()
+class Request():
+  def __init__(self, ssp=None):
+    if ssp:
+      self._ssp_ = ssp
+    else:
+      self._ssp_ = _MemSpider()
   def get(self,url,header=None,timeout=30,useIp=False,saveCookie=True):
     ssp = None
     if(saveCookie): ssp=self._ssp_
@@ -29,4 +32,4 @@ class _Request():
     self._ssp_.setCookie(url,cookie)
   def setCookieStore(self,cookieStore):
     self._ssp_.cookie_store = cookieStore
-req = _Request()
+req = Request()
