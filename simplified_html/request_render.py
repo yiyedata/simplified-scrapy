@@ -142,12 +142,12 @@ class RequestRender():
     res = await self._get(u,options,js,delay)
     return res
   async def _getContent(self,url,callback,options=None,extr_data=None,js=None,delay=0):
-    res = await self._getAsync(url,options,js)
+    res = await self._getAsync(url,options,js,delay)
     if(callback):
       callback(res[0],url,extr_data)
     return res[0]
   async def _getCookies(self,url,callback,options=None,extr_data=None,js=None,delay=0):
-    res = await self._getAsync(url,options,js)
+    res = await self._getAsync(url,options,js,delay)
     cookies = []
     for cookie in res[1]:
       cookies.append(cookie['name']+'='+cookie['value'])
