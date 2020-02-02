@@ -10,3 +10,4 @@ dist/*
 pyppeteer/*
 simplified_scrapy.egg-info/*
 export_obj2http.py
+stoped.txt
