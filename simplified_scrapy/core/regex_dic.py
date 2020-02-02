@@ -36,7 +36,9 @@ class RegexDict(Dict):
       if attr=='parent':
         return self.getParent()
       if len(attr)>1 and attr[-1:] == 's':
-        return self.getElementsByTag(attr[:-1])
+        html = self.get('html')
+        if html and html.find('<'+attr+' ')<0 and html.find('<'+attr+'>')<0:
+          return self.getElementsByTag(attr[:-1])
       return self.getElementByTag(attr)
   def unescape(self,text=None):
     if not text:
@@ -160,12 +162,27 @@ class RegexDict(Dict):
       end = html.find('<',s)
       r = html.find('>',s)
       if end<0 or r<0:
-        return html[start:]
+        return html[start:].strip()
       m = html[end+1:r].find('<')
       if m<0:
-        return html[start:end]
+        return html[start:end].strip()
       s += m
     
+  def firstText(self):
+    if not self.html:
+      return ''
+    start = 0
+    s = start
+    html = self.html
+    while True:
+      end = html.find('<',s)
+      r = html.find('>',s)
+      if end<0 or r<0:
+        return html[start:].strip()
+      m = html[end+1:r].find('<')
+      if m<0:
+        return html[start:end].strip()
+      s += m
   def trimHtml(self):
     if(not self.html): return None
     self['html'] = trimHtml(self.html)
@@ -384,7 +401,7 @@ def _getParas(value):
     tag=paras[0]
   return tag.split('|') if tag else None,attr,value
 def RegexDictNew(dic,root,parent=None,s=None):
-  if not dic: return None
+  if not dic: return Dict()
   ele = RegexDict(dic)
   _s=0
   if s!=None: _s=s

@@ -182,8 +182,8 @@ def listImg(html,baseUrl=None,start=None,end=None,before=None):
   return list(dic.values())
 def preDealHtml(html):
   # html = re.compile('<[\n]+').sub('<',html)
-  html = re.compile('[\s]*>[\s]*').sub('>',html)
-  html = re.compile('[\s]*<[\s]*').sub('<',html) # script?
+  html = re.compile('[\s]*>').sub('>',html)
+  html = re.compile('<[\s]*').sub('<',html) # script?
   html = re.compile('[\s]*/>').sub(' />',html) # script?
   # html = re.compile('<[\S]+([\s]+)').sub(_replaceHtml,html) # script?
   html = re.compile('<[^>]+>').sub(_replaceHtml,html) # script?
