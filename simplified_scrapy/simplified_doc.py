@@ -26,38 +26,38 @@ class SimplifiedDoc(RegexDict):
   
   def listA(self, html=None, url=None,start=None,end=None,before=None):
     if(not html):html=self.html
-    if(not html and self.last):html=self.last.innerHtml
-    return listA(html,url,start,end,before)
+    if(not html and self.last):html=self.last.html
+    return List(listA(html,url,start,end,before))
 
   def listImg(self, html=None, url=None,start=None,end=None,before=None):
     if(not html):html=self.html
-    if(not html and self.last):html=self.last.innerHtml
-    return listImg(html,url,start,end,before)
+    if(not html and self.last):html=self.last.html
+    return List(listImg(html,url,start,end,before))
 
   def getElementByID(self, id, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getElementByID(id,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
 
   def getElementByText(self, text, tag=None, html=None,start=None,end=None,before=None):
     if(not html):html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getElementByText(text,tag,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
 
   def getElementByReg(self, regex, tag=None, html=None,start=None,end=None,before=None):
     if(not html):html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getElementByReg(regex,tag,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
   def getElementsByReg(self, regex, tag=None, html=None,start=None,end=None,before=None):
     if(not html):html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     lst=List()
     ele = getElementByReg(regex,tag,html,start,end,before)
     ele = RegexDictNew(ele,root=self)
@@ -75,7 +75,7 @@ class SimplifiedDoc(RegexDict):
   def getElementByTag(self, tag, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getElementByTag(tag,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
@@ -83,7 +83,7 @@ class SimplifiedDoc(RegexDict):
   def getElementByClass(self, className, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getElementByClass(className,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
@@ -97,21 +97,21 @@ class SimplifiedDoc(RegexDict):
   def getElementsByTag(self, tag, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     eles = getElementsByTag(tag,html,start,end,before)
     return self._convert2lst(eles)
 
   def getElementsByClass(self, className, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     eles =  getElementsByClass(className,html,start,end,before)
     return self._convert2lst(eles)
 
   def getElementByAttr(self, attr,value, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getElementByAttr(attr,value,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
@@ -119,7 +119,7 @@ class SimplifiedDoc(RegexDict):
   def getElement(self,tag,attr='class',value=None, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getElement(tag,attr,value,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
@@ -127,21 +127,21 @@ class SimplifiedDoc(RegexDict):
   def removeElement(self,tag,attr='class',value=None, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self['html']= removeElement(tag,attr,value,html,start,end,before)
     return self['html']
 
   def getElements(self,tag,attr='class',value=None, html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     eles = getElements(tag,attr,value,html,start,end,before)
     return self._convert2lst(eles)
 
   def getParent(self,tag=None,attr=None,value=None,html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     self.last = getParent(tag,attr,value,html,start,end,before)
     self.last=RegexDictNew(self.last,root=self)
     return self.last
@@ -149,23 +149,23 @@ class SimplifiedDoc(RegexDict):
   def getChildren(self,html=None,tag=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     eles = getChildren(html,tag,start,end,before)
     return self._convert2lst(eles)
 
   def getNexts(self,attr,value,html,tag=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     eles = getNexts(attr,value,html,tag,start,end,before)
     return self._convert2lst(eles)
   def getElementByStr(self,html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     s,e=getSection(html,start,end,before)
     if s<0 or e<0: 
-      return None
+      return Dict()
     if end: e+=len(end)
     ele = Dict()
     ele.html = html[s:e]
@@ -175,8 +175,8 @@ class SimplifiedDoc(RegexDict):
   def getElementsByStr(self,html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
-    lst = []
+    if(not html and self.last):html=self.last.html
+    lst = List()
     ele = None
     while True:
       s=0
@@ -195,19 +195,19 @@ class SimplifiedDoc(RegexDict):
   def getSectionByReg(self,regex,html=None,group=0,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     return getOneByReg(html,regex,group,start,end,before)
 
   def getSectionsByReg(self,regex,html=None,group=0,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     return getListByReg(html,regex,group,start,end,before)
 
   def _getSection(self,html=None,start=None,end=None,before=None):
     if html: html = preDealHtml(html)
     if(not html): html=self.html
-    if(not html and self.last):html=self.last.innerHtml
+    if(not html and self.last):html=self.last.html
     s,e=getSection(html,start,end,before)
     l = 0
     if before: l=len(before)

@@ -22,3 +22,47 @@ class Dict(dict):
     del self[key]
   # def set(self,key,value):
   #   self[key]=value
+
+  def contains(self, value, attr='html'):
+    v = self.__getattr__(attr)
+    if(v==None): return False
+    if isinstance(value, list):
+      for r in value:
+        if v.find(r)<0:
+          return False
+    else:
+      if value and v.find(value)<0:
+        return False
+    return True
+  def containsOr(self, value, attr='html'):
+    v = self.__getattr__(attr)
+    if(v==None): return False
+    if isinstance(value, list):
+      for r in value:
+        if v.find(r)>=0:
+          return True
+      return False
+    else:
+      if value and v.find(value)<0:
+        return False
+    return True
+
+  def notContains(self, value, attr='html'):
+    v = self.__getattr__(attr)
+    if(v==None): return True
+    if isinstance(value, list):
+      for r in value:
+        if v.find(r)>=0:
+          return False
+    else:
+      if not value or v.find(value)>=0:
+        return False
+    return True
+    
+  def containsReg(self, value, attr='html'):
+    v = self.__getattr__(attr)
+    if(not v): return False
+    return _checkContains(v, value)
+def _checkContains(html, reg):
+  import re
+  return not not re.compile(reg).search(html)

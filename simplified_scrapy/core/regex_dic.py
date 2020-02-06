@@ -19,9 +19,12 @@ class RegexDict(Dict):
     elif attr=='html':
       return ''
     else:
-      if attr=='innerHtml':
-        return self.get('html')
-      if attr=='innerText' or attr=='text':
+      if attr=='outerHtml':
+        if self._rootNode:
+          return self._rootNode.html[self._start:self._end]
+      # if attr=='innerHtml':
+      #   return self.get('html')
+      if attr=='text':# or attr=='innerText':
         return removeHtml(self.get('html'))
       if attr=='children':
         return self.getChildren()
@@ -48,57 +51,47 @@ class RegexDict(Dict):
     return ""
     
   def listA(self, url=None,start=None,end=None,before=None):
-    if(not self.html): return None
-    return listA(self.html,url,start,end,before)
+    if(not self.html): return List()
+    return List(listA(self.html,url,start,end,before))
 
   def listImg(self, url=None,start=None,end=None,before=None):
-    if(not self.html): return None
-    return listImg(self.html,url,start,end,before)
+    if(not self.html): return List()
+    return List(listImg(self.html,url,start,end,before))
 
   def getElementByID(self, id,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return Dict()
     ele = getElementByID(id,self.html,start,end,before)
-    if(ele):
-      return RegexDictNew(ele,root=self._rootNode,parent=self)
-    return None
+    return RegexDictNew(ele,root=self._rootNode,parent=self)
 
   def getElementByTag(self, tag,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return Dict()
     ele = getElementByTag(tag,self.html,start,end,before)
-    if(ele):
-      return RegexDictNew(ele,root=self._rootNode,parent=self)
-    return None
+    return RegexDictNew(ele,root=self._rootNode,parent=self)
 
   def getElementByClass(self, className,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return Dict()
     ele = getElementByClass(className,self.html,start,end,before)
-    if(ele):
-      return RegexDictNew(ele,root=self._rootNode,parent=self)
-    return None
+    return RegexDictNew(ele,root=self._rootNode,parent=self)
 
   def getElementsByTag(self, tag,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return List()
     eles = getElementsByTag(tag,self.html,start,end,before)
     return self._convert2lst(eles,parent=self)
 
   def getElementsByClass(self, className,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return List()
     eles = getElementsByClass(className,self.html,start,end,before)
     return self._convert2lst(eles,parent=self)
 
   def getElementByAttr(self, attr,value,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return Dict()
     ele = getElementByAttr(attr,value,self.html,start,end,before)
-    if(ele):
-      return RegexDictNew(ele,root=self._rootNode,parent=self)
-    return None
+    return RegexDictNew(ele,root=self._rootNode,parent=self)
 
   def getElement(self,tag,attr='class',value=None,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return Dict()
     ele = getElement(tag,attr,value,self.html,start,end,before)
-    if(ele):
-      return RegexDictNew(ele,root=self._rootNode,parent=self)
-    return None
+    return RegexDictNew(ele,root=self._rootNode,parent=self)
 
   def removeElement(self,tag,attr='class',value=None,start=None,end=None,before=None):
      if(self.html): 
@@ -106,36 +99,38 @@ class RegexDict(Dict):
      return self
 
   def getElements(self,tag,attr='class',value=None,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return List()
     eles = getElements(tag,attr,value,self.html,start,end,before)
     return self._convert2lst(eles,self)
 
   def getElementByText(self, text, tag=None,start=None,end=None,before=None):
-    html=self.html
-    ele = getElementByText(text, tag, html,start,end,before)
-    if(ele):
-      return RegexDictNew(ele,root=self._rootNode,parent=self)
-    return None
+    if(not self.html): return Dict()
+    ele = getElementByText(text, tag, self.html,start,end,before)
+    return RegexDictNew(ele,root=self._rootNode,parent=self)
+    
   def getElementByReg(self, regex, tag=None,start=None,end=None,before=None):
-    html=self.html
-    ele = getElementByReg(regex, tag, html,start,end,before)
-    if(ele):
-      return RegexDictNew(ele,root=self._rootNode,parent=self)
-    return None
+    if(not self.html): return Dict()
+    ele = getElementByReg(regex, tag,self.html,start,end,before)
+    return RegexDictNew(ele,root=self._rootNode,parent=self)
+    
   def getParent(self,tag=None):
+    if(not self._rootNode): return Dict()
     html=self._rootNode.html
     ele = getParent4Ele(html,self,tag)
     return RegexDictNew(ele,root=self._rootNode)
   def getNexts(self,tag=None):
+    if(not self._rootNode): return List()
     html = self._rootNode.html
     eles = getNexts4Ele(html,self,tag)
     return self._convert2lst(eles,s=self._end)
   def getPrevious(self,tag=None):
+    if(not self._rootNode): return List()
     html = self._rootNode.html
     eles = getPrevious4Ele(html,self,tag)
     return self._convert2lst(eles)
 
   def getNext(self,tag=None):
+    if(not self._rootNode): return Dict()
     html = self._rootNode.html
     eles = getNext4Ele(html,self,tag)
     return RegexDictNew(eles,root=self._rootNode,s=0)#self._end)
@@ -146,7 +141,7 @@ class RegexDict(Dict):
     s=self._rootNode.html.find('>',self._start)+1
     return RegexDictNew(eles,root=self._rootNode,s=s)
   def getChildren(self,tag=None,start=None,end=None,before=None):
-    if(not self.html): return None
+    if(not self.html): return List()
     eles = getChildren(self.html,tag,start,end,before)
     s=self._rootNode.html.find('>',self._start)+1
     return self._convert2lst(eles,s=s)
@@ -188,42 +183,42 @@ class RegexDict(Dict):
     self['html'] = trimHtml(self.html)
     return self.html
 
-  def contains(self, value, attr='html'):
-    if(self[attr]==None): return False
-    if isinstance(value, list):
-      for r in value:
-        if self[attr].find(r)<0:
-          return False
-    else:
-      if value and self[attr].find(value)<0:
-        return False
-    return True
-  def containsOr(self, value, attr='html'):
-    if(self[attr]==None): return False
-    if isinstance(value, list):
-      for r in value:
-        if self[attr].find(r)>=0:
-          return True
-      return False
-    else:
-      if value and self[attr].find(value)<0:
-        return False
-    return True
+  # def contains(self, value, attr='html'):
+  #   if(self[attr]==None): return False
+  #   if isinstance(value, list):
+  #     for r in value:
+  #       if self[attr].find(r)<0:
+  #         return False
+  #   else:
+  #     if value and self[attr].find(value)<0:
+  #       return False
+  #   return True
+  # def containsOr(self, value, attr='html'):
+  #   if(self[attr]==None): return False
+  #   if isinstance(value, list):
+  #     for r in value:
+  #       if self[attr].find(r)>=0:
+  #         return True
+  #     return False
+  #   else:
+  #     if value and self[attr].find(value)<0:
+  #       return False
+  #   return True
 
-  def notContains(self, value, attr='html'):
-    if(self[attr]==None): return True
-    if isinstance(value, list):
-      for r in value:
-        if self[attr].find(r)>=0:
-          return False
-    else:
-      if not value or self[attr].find(value)>=0:
-        return False
-    return True
+  # def notContains(self, value, attr='html'):
+  #   if(self[attr]==None): return True
+  #   if isinstance(value, list):
+  #     for r in value:
+  #       if self[attr].find(r)>=0:
+  #         return False
+  #   else:
+  #     if not value or self[attr].find(value)>=0:
+  #       return False
+  #   return True
     
-  def containsReg(self, value, attr='html'):
-    if(not self[attr]): return False
-    return checkContains(self[attr], value)
+  # def containsReg(self, value, attr='html'):
+  #   if(not self[attr]): return False
+  #   return checkContains(self[attr], value)
 
   def _convert2lst(self,eles,parent=None,s=None):
     lst=List()
@@ -242,31 +237,6 @@ class RegexDict(Dict):
     return getListByReg(self.html,regex,group,start,end,before)
   def select(self,value,start=None,end=None,before=None):
     return _select(self,value,start,end,before)
-    # if value == None: return None
-    # s = value.find('(')
-    # tp = None
-    # if s>0:
-    #   s = value.rfind('>',0,s)
-    #   if s>0:
-    #     tp = value[s+1:]
-    #     value = value[0:s]
-    #   else:
-    #     tp = value
-    #     value=''
-    # values = value.split('>')
-    # ele=None
-    # _ele=self
-    # for v in values:
-    #   if not v: continue
-    #   tag,attr,value = _getParas(v.strip())
-    #   ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
-    #   start = end = before = None
-    #   _ele = ele
-    #   if not _ele:
-    #     return None
-    # if tp:
-    #   return _selectText(_ele,tp,start,end,before)
-    # return ele
   def selects(self,value,start=None,end=None,before=None):
     if value == None: return List()
     s = value.find('(')
@@ -283,8 +253,6 @@ class RegexDict(Dict):
     N = len(values)
     ele=None
     _ele=self
-    # if values[-1].find('(')>0 and values[-1].strip()[-1]==')':
-    #   N-=1
     for i in range(0,N-1):
       v = values[i]
       if not v: continue
@@ -293,7 +261,6 @@ class RegexDict(Dict):
       _ele = ele
       if not _ele:
         return None
-    # return ele
     tag,attr,value = _getParas(values[N-1])
     eles = _ele.getElements(tag,attr,value,start=start,end=end,before=before)
     start = end = before = None
@@ -301,9 +268,11 @@ class RegexDict(Dict):
       eles = [_selectText(e,tp) for e in eles]
     return eles
 def _getValue(_ele,attr):
-  if attr in ['text','innerText']: return _ele.text
-  elif attr in ['innerHtml']: return _ele.html
-  else: return _ele[attr]
+  return _ele[attr]
+  # if attr in ['text','innerText']: return _ele.text
+  # elif attr in ['innerHtml']: return _ele.html
+  # else: 
+  #   return _ele[attr]
 def _select(_self,value,start=None,end=None,before=None):
   if value == None: return None
   s = value.find('(')
@@ -412,3 +381,8 @@ def RegexDictNew(dic,root,parent=None,s=None):
   ele._rootNode=root
   ele._parentNode=parent
   return ele
+# def convert2rdicLst(lst):
+#   eles = List()
+#   for l in lst:
+#     eles.append(RegexDict(l))
+#   return eles
