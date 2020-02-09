@@ -180,17 +180,23 @@ def listImg(html,baseUrl=None,start=None,end=None,before=None):
       printInfo(ex)
     
   return list(dic.values())
+__re0=re.compile('<[^><]+>')
 def preDealHtml(html):
-  # html = re.compile('<[\n]+').sub('<',html)
-  html = re.compile('[\s]*>').sub('>',html)
-  html = re.compile('<[\s]*').sub('<',html) # script?
-  html = re.compile('[\s]*/>').sub(' />',html) # script?
-  # html = re.compile('<[\S]+([\s]+)').sub(_replaceHtml,html) # script?
-  html = re.compile('<[^>]+>').sub(_replaceHtml,html) # script?
+  # html = re.compile('[\s]*>').sub('>',html)
+  # html = re.compile('<[\s]*').sub('<',html) # script?
+  # html = re.compile('[\s]*/>').sub(' />',html) # script?
+  html = __re0.sub(_replaceHtml,html) # script?
   return html
+__re1=re.compile('[\s]*>')
+__re2=re.compile('<[\s]*')
+__re3=re.compile('[\s]*/>')
+__re4=re.compile('[\s]+')
 def _replaceHtml(value):
-  # return value.group().strip()+' '
-  return re.compile('[\s]+').sub(' ',value.group())
+  html = value.group()
+  html = __re1.sub('>',html)
+  html = __re2.sub('<',html) # script?
+  html = __re3.sub(' />',html) # script?
+  return __re4.sub(' ',html)
 
 def removeScripts(html):
   if (not html): return html
@@ -307,9 +313,13 @@ def _getElementByTag(tag,html,start=None,end=None,before=None):
     ele._end=end+s
     return (ele,start,end)
   return None
+__reh0=re.compile('<!--[\s\S]*?-->')
+__reh1=re.compile('<[^<>]*?>')
+__reh2=re.compile('(\\s|&nbsp;)+')
+__reh3=re.compile('(\s*_yazz_\s*)+')
 def removeHtml(html,replace='',tags=None):
   if not html: return html
-  innerText = re.compile('<!--[\s\S]*?-->').sub('',html)
+  innerText = __reh0.sub('',html)
   if not tags:
     tags = ['br','p']
   while innerText.find('>')>=0:
@@ -317,15 +327,13 @@ def removeHtml(html,replace='',tags=None):
     if replace:
       for tag in tags:
         text = re.compile('<[/]*'+tag+'[^<>]*?>').sub('_yazz_',text)
-    text = re.compile('<[^<>]*?>').sub('',text)
+    text = __reh1.sub('',text)
     if text == innerText:
       break
     innerText = text
-    
-  innerText = re.sub('(\\s|&nbsp;)+', ' ', innerText.strip(), 0)
+  innerText = __reh2.sub(' ', innerText.strip())
   if replace:
-    innerText = re.sub('(\s*_yazz_\s*)+', replace, innerText, 0)
-
+    innerText = __reh3.sub(replace, innerText)
   return innerText.strip().strip(replace)
 
 def replaceReg(html, regex, new, count = 0):

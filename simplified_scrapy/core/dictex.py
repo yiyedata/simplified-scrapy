@@ -23,6 +23,16 @@ class Dict(dict):
   # def set(self,key,value):
   #   self[key]=value
 
+  def equal(self, value, attr='class'):
+    v = self.__getattr__(attr)
+    if(v==None): return False
+    if isinstance(value, list):
+      for r in value:
+        if v==r:
+          return True
+    else:
+      return v==value
+    return False
   def contains(self, value, attr='html'):
     v = self.__getattr__(attr)
     if(v==None): return False

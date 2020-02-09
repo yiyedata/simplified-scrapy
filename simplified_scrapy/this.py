@@ -1,0 +1,2 @@
+_origin='My girlfriend complained to me that using Scrapy to collect data was too much trouble. In the company, my job is relatively easy, so I learned Python in my spare time. I first learned the basic syntax of python, then I developed a simple data collection framework myself, named simplified-scrapy. This means that it is much simpler than scrapy, but it is not weak. With the data collection framework, but no data extraction part, I continued to develop the SimplifiedDoc library. So we have the current package.'
+print (_origin)

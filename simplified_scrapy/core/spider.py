@@ -191,17 +191,15 @@ class Spider():
   _startCountTs=time.time()
   def checkConcurrency(self):
     tmSpan = time.time()-self._startCountTs
-    if(tmSpan>1):
-      if(self._downloadPageNum>(self.concurrencyPer1s*tmSpan)):
-        return False
-      self._startCountTs=time.time()
-      self._downloadPageNum=1
-    elif self.url_store.getCount()>0:
-      self._downloadPageNum=self._downloadPageNum+1
+    if(self._downloadPageNum>(self.concurrencyPer1s*tmSpan)):
+      return False
+    self._startCountTs=time.time()
+    self._downloadPageNum=0
     return True
   def popUrl(self):
     if(self.checkConcurrency()):
       url = self.url_store.popUrl()
+      if url: self._downloadPageNum=self._downloadPageNum+1
       return url
     else:
       printInfo('Downloads are too frequent')

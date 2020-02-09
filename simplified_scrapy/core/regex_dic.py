@@ -162,7 +162,21 @@ class RegexDict(Dict):
       if m<0:
         return html[start:end].strip()
       s += m
-    
+  def previousText(self):
+    if not self._rootNode or not self._rootNode.html:
+      return ''
+    end = self._start
+    s = end
+    html = self._rootNode.html
+    while True:
+      s = html.rfind('>',0,s)
+      r = html.rfind('<',0,s)
+      if s<0 or r<0:
+        return html[0:end].strip()
+      m = html[r:s].find('>')
+      if m<0:
+        return html[s+1:end].strip()
+      return html[r+m+1:end].strip()
   def firstText(self):
     if not self.html:
       return ''
@@ -260,7 +274,7 @@ class RegexDict(Dict):
       ele = _ele.getElement(tag,attr,value,start=start,end=end,before=before)
       _ele = ele
       if not _ele:
-        return None
+        return List()
     tag,attr,value = _getParas(values[N-1])
     eles = _ele.getElements(tag,attr,value,start=start,end=end,before=before)
     start = end = before = None
@@ -268,7 +282,7 @@ class RegexDict(Dict):
       eles = [_selectText(e,tp) for e in eles]
     return eles
 def _getValue(_ele,attr):
-  return _ele[attr]
+  return _ele.__getattr__(attr)
   # if attr in ['text','innerText']: return _ele.text
   # elif attr in ['innerHtml']: return _ele.html
   # else: 

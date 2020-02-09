@@ -1,6 +1,13 @@
 #!/usr/bin/python
 #coding=utf-8
 class List(list):
+  def equal(self, value, attr='class'):
+    tmp=List()
+    for l in self:
+      if hasattr(l, 'equal'):
+        flag = l.equal(value,attr)
+        if flag: tmp.append(l)
+    return tmp
   def contains(self, value, attr='html'):
     tmp=List()
     for l in self:
