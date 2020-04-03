@@ -1,7 +1,8 @@
 #!/usr/bin/python
 #coding=utf-8
 from pymongo import MongoClient
-class MongoObjStore:
+from simplified_scrapy.core.objstore_base import ObjStoreBase
+class MongoObjStore(ObjStoreBase):
   _host='127.0.0.1'
   _port=27017
   _dbName='python_db'

@@ -5,6 +5,7 @@ import urllib
 import json,copy
 import sys,socket,random,time,re
 import traceback,logging
+from simplified_scrapy.core.zip_helper import decodeZip
 import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 from simplified_scrapy.core.utils import printInfo,getTime,saveFile
@@ -51,6 +52,7 @@ _contentTypeJson='application/json'
 _defaultHeader={
   'User-Agent':_userAgent,
   'Accept':_accept,
+  'Accept-Encoding':'gzip, deflate'
   }
 _jsonHeader={
   'User-Agent':_userAgent,
@@ -59,7 +61,8 @@ _jsonHeader={
 _defaultHeaderPost={
   'User-Agent':_userAgent,
   'Accept':_accept,
-  'Content-Type':_contentType
+  'Content-Type':_contentType,
+  'Accept-Encoding':'gzip, deflate'
   }
 _jsonHeaderPost={
   'User-Agent':_userAgent,
@@ -69,20 +72,20 @@ _jsonHeaderPost={
 _cache_encodings={}
 def _getMaintype(res):
   if sys.version_info.major == 2:
-    maintype = res.headers.maintype
+    maintype = res.headers.type
   else: 
     maintype =res.info().get('Content-Type')
   return maintype
 def _checkMaintype(maintype):
-  types = ['xml','plain','text','html','json']
+  types = ['xml','plain','text','html','json','javascript','java']
   for t in types:
     if(maintype.find(t)>=0):
       return True
   return False
-def requestPost(url, data, headers=None, useIp=False, ssp=None,timeout=30,error=False):
+def requestPost(url, data, headers=None, useIp=False, ssp=None,timeout=30,error=False, method=None):
   response = None
   _head = _defaultHeaderPost
-  if(data and isinstance(data,dict)):
+  if(data and (isinstance(data,dict) or isinstance(data,list))):
     _head = _jsonHeaderPost
     data = json.dumps(data)
   if headers: header = headers
@@ -101,14 +104,10 @@ def requestPost(url, data, headers=None, useIp=False, ssp=None,timeout=30,error=
   try:
     if(headers and not headers.get('User-Agent') and useragent):
       header['User-Agent']=random.choice(useragent)
-    # if(not header.get('User-Agent')):
-    #   header['User-Agent']=_head['User-Agent']
-    # if(not header.get('Accept')):
-    #   header['Accept']=_head['Accept']
     if(sys.version_info.major==3):
       if(data): data=data.encode("utf-8")
     req = urllib2.Request(url, data, header)
-    
+    if method: req.get_method = lambda:method.upper()
     if(ssp):
       req = ssp.beforeRequest(url, req)
     opener = None
@@ -119,6 +118,10 @@ def requestPost(url, data, headers=None, useIp=False, ssp=None,timeout=30,error=
     if(not opener): opener = urllib2.build_opener()
     
     response = opener.open(req,None,timeout)
+    if headers != None:
+      cookie = _getCookie(response)
+      if cookie:
+        headers['newCookie']=cookie
     if(ssp):
       if error:
         return ssp.afterResponse(response,url,error)
@@ -134,12 +137,41 @@ def requestPost(url, data, headers=None, useIp=False, ssp=None,timeout=30,error=
     if response and _checkMaintype(_getMaintype(response)): 
       response.close()
   return "_error_"
+def _getCookie(response):
+  if sys.version_info.major == 2:
+    cookie = response.info().getheaders('Set-Cookie')
+  else:
+    cookie = response.info().get('Set-Cookie')
+  return cookie
+def _getResponseStr(res):
+  if not isinstance(res,bytes):
+    return res
+  htmSource = res
+  try:
+    html=htmSource.decode("utf-8")
+  except:
+    try:
+      html=htmSource.decode("gb18030")
+    except:
+      try:
+        html=htmSource.decode("ISO-8859-1")
+      except:
+        try:
+          html=htmSource.decode("ASCII")
+        except:
+          try:
+            html=htmSource.decode("Unicode")
+          except Exception as err:
+            return res
+  return html
 
 def getResponseStr(res,url,ssp=None,error=False):
   html="_error_"
   if(not _checkMaintype(_getMaintype(res))):
     return res
-  htmSource = res.read()
+  htmSource = decodeZip(res)
+  if not isinstance(htmSource,bytes):
+    htmSource = res.read()
   domain = url.split('/')[2]
   try:
     if _cache_encodings.get(domain):
@@ -173,11 +205,7 @@ def getResponseStr(res,url,ssp=None,error=False):
             if(not error):
               log(err.reason or err.message,url)
             else:
-              return res
-      # try:
-      #   html=str(htmSource).decode("string_escape")
-      # except Exception as err:
-      #   log(err.reason,url)
+              return htmSource
   return html
 def setProxyGloab(proxy):
   proxy_handler = urllib2.ProxyHandler({proxy['p']:proxy['ip']})
@@ -215,13 +243,6 @@ def requestGet(url, headers, useIp, ssp=None,timeout=30,error=False):
   try:
     if(headers and not headers.get('User-Agent') and useragent):
       header['User-Agent'] = random.choice(useragent)
-    # if(not header.get('User-Agent')):
-    #   header['User-Agent']=_defaultHeader['User-Agent']
-    # if(not header.get('Accept')):
-    #   if(url[-5:].lower()=='.json'):
-    #     header['Accept']=_jsonHeader['Accept']
-    #   else:
-    #     header['Accept']=_defaultHeader['Accept']
       
     req = urllib2.Request(url, None, header)
     if(ssp): 
@@ -235,6 +256,10 @@ def requestGet(url, headers, useIp, ssp=None,timeout=30,error=False):
     if(not opener): opener = urllib2.build_opener()
 
     response = opener.open(req,None,timeout)
+    if headers != None:
+      cookie = _getCookie(response)
+      if cookie:
+        headers['newCookie']=cookie
     if(ssp): 
       if(error):
         data = ssp.afterResponse(response,url,error)
@@ -253,7 +278,6 @@ def requestGet(url, headers, useIp, ssp=None,timeout=30,error=False):
       response.close()
   return "_error_"
 def extractHtml(url,html,model,modelName,title=None):
-  # headers = { "Content-Type": "application/json" }
   data={
     'url':url,
     'title':title,
@@ -263,10 +287,8 @@ def extractHtml(url,html,model,modelName,title=None):
   }
   if(modelName): 
     data['modelName']=json.dumps(modelName)
-  
-  # data = json.dumps(data)
   obj = requestPost(extract_api_url,data)
-  return obj#.decode("UTF-8").encode(type)
+  return obj
 
 # model=['{"Type":2}','{"Type":3}']
 # print json.dumps(model)

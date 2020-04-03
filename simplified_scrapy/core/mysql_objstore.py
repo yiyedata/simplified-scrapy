@@ -1,7 +1,8 @@
 #!/usr/bin/python
 #coding=utf-8
 import pymysql,json
-class MysqlObjStore:
+from simplified_scrapy.core.objstore_base import ObjStoreBase
+class MysqlObjStore(ObjStoreBase):
   _host='127.0.0.1'
   _port=3306
   _user='root'

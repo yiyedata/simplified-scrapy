@@ -3,12 +3,13 @@
 import os,io,json
 import sys
 from simplified_scrapy.core.utils import printInfo
+from simplified_scrapy.core.cookiestroe_base import CookieStoreBase
 if sys.version_info.major == 2:
   from urlparse import urlparse
 else:
   import urllib
   urlparse = urllib.parse.urlparse
-class CookieStore:
+class CookieStore(CookieStoreBase):
   _cookies={}
   _cookieFilename = 'db/cookies.yd'
   

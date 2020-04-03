@@ -2,7 +2,8 @@
 #coding=utf-8
 import socket,time
 from pymongo import MongoClient
-class MongoHtmlStore:
+from simplified_scrapy.core.htmlstore_base import HtmlStoreBase
+class MongoHtmlStore(HtmlStoreBase):
   _host='127.0.0.1'
   _port=27017
   _dbName='python_db'

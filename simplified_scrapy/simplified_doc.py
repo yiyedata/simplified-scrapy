@@ -1,8 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
-import simplified_scrapy.core.logex
 from simplified_scrapy.core.regex_helper import *
-from simplified_scrapy.core.request_helper import extractHtml
+from simplified_scrapy.core.request_helper import extractHtml, _getResponseStr
 from simplified_scrapy.extracter import ExtractModel
 from simplified_scrapy.core.utils import absoluteUrl
 from simplified_scrapy.core.regex_dic import RegexDict, RegexDictNew
@@ -13,12 +12,14 @@ class SimplifiedDoc(RegexDict):
     self['html']=None
     self.last=None
     if(not html): return
+    html = _getResponseStr(html)
     sec = getSection(html,start,end,before)
     if(sec): html=html[sec[0]:sec[1]]
     html = preDealHtml(html)
     self['html'] = html
   def loadHtml(self,html,start=None,end=None,before=None):
     if(not html): return
+    html = _getResponseStr(html)
     sec = getSection(html,start,end,before)
     if(sec): html=html[sec[0]:sec[1]]
     html = preDealHtml(html)
@@ -129,6 +130,17 @@ class SimplifiedDoc(RegexDict):
     if(not html): html=self.html
     if(not html and self.last):html=self.last.html
     self['html']= removeElement(tag,attr,value,html,start,end,before)
+    return self['html']
+  def removeElements(self,tag,attr='class',value=None, html=None,start=None,end=None,before=None):
+    if html: html = preDealHtml(html)
+    if(not html): html=self.html
+    if(not html and self.last):html=self.last.html
+    while True:
+      tmp = removeElement(tag,attr,value,html,start,end,before)
+      if tmp!=html:
+        html = tmp
+      else: break
+    self['html'] = html
     return self['html']
 
   def getElements(self,tag,attr='class',value=None, html=None,start=None,end=None,before=None):

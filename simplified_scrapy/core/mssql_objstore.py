@@ -1,7 +1,8 @@
 #!/usr/bin/python
 #coding=utf-8
 import pymssql,json
-class MssqlObjStore:
+from simplified_scrapy.core.objstore_base import ObjStoreBase
+class MssqlObjStore(ObjStoreBase):
   _host='(local)'
   _port=1433
   _user='sa'

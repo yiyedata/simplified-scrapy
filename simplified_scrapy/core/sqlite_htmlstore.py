@@ -4,8 +4,9 @@ import os,io,json,time
 import sqlite3
 import sys
 from simplified_scrapy.core.utils import printInfo,getTimeNow,md5
+from simplified_scrapy.core.htmlstore_base import HtmlStoreBase
   
-class SqliteHtmlStore:
+class SqliteHtmlStore(HtmlStoreBase):
   # _htmls=[]
   _htmlPath='htmls/{}/'
   _dbPath='db/{}.db'

@@ -1,4 +1,3 @@
-import simplified_scrapy.core.logex
 from simplified_scrapy.core.regex_helper import *
 from simplified_scrapy.core.request_helper import extractHtml
 from simplified_scrapy.extracter import ExtractModel
@@ -22,10 +21,8 @@ class RegexDict(Dict):
       if attr=='outerHtml':
         if self._rootNode:
           return self._rootNode.html[self._start:self._end]
-      # if attr=='innerHtml':
-      #   return self.get('html')
-      if attr=='text':# or attr=='innerText':
-        return removeHtml(self.get('html'))
+      if attr=='text':
+        return removeHtml(self.get('html'))#['html'])
       if attr=='children':
         return self.getChildren()
       if attr=='child':
@@ -94,9 +91,17 @@ class RegexDict(Dict):
     return RegexDictNew(ele,root=self._rootNode,parent=self)
 
   def removeElement(self,tag,attr='class',value=None,start=None,end=None,before=None):
-     if(self.html): 
+    if(self.html): 
       self['html'] = removeElement(tag,attr,value,self.html,start,end,before)
-     return self
+    return self
+  def removeElements(self,tag,attr='class',value=None,start=None,end=None,before=None):
+    if(self.html): 
+      while True:
+        tmp = removeElement(tag,attr,value,self.html,start,end,before)
+        if tmp!=self.html:
+          self['html'] = tmp
+        else: break
+    return self
 
   def getElements(self,tag,attr='class',value=None,start=None,end=None,before=None):
     if(not self.html): return List()
@@ -135,6 +140,36 @@ class RegexDict(Dict):
     eles = getNext4Ele(html,self,tag)
     return RegexDictNew(eles,root=self._rootNode,s=0)#self._end)
 
+  def getTable(self,body='tbody',columns=None,rowReg=None,colReg=None,start=None,end=None,before=None): # header='thead' or header=0
+    table = self
+    if body:
+      table = self.getElementByTag(body,start=start,end=end,before=before)
+    if not rowReg or not colReg:
+      rows = table.children.children.text
+      if columns:
+        table = List()
+        for row in rows:
+          tmp = List()
+          for i in columns:
+            tmp.append(row[i])
+          table.append(tmp)
+        return table
+      else:
+        return rows
+    rows = getListByReg(table.html,rowReg)
+    table = List()
+    for row in rows:
+      tds = getListByReg(row,colReg)
+      tmp=List()
+      if columns:
+        for i in columns:
+          tmp.append(removeHtml(tds[i]))
+      else:
+        for i in range(0,len(tds)):
+          tmp.append(removeHtml(tds[i]))
+      table.append(tmp)
+    return table
+
   def getChild(self,tag=None,start=None,end=None,before=None):
     if(not self.html): return None
     eles = getChild(self.html,tag,start,end,before)
@@ -147,12 +182,17 @@ class RegexDict(Dict):
     return self._convert2lst(eles,s=s)
   def getText(self,separator='',tags=None):
     return removeHtml(self.get('html'),separator,tags)
-  def nextText(self):
+  def nextText(self,end=None):
     if not self._rootNode or not self._rootNode.html:
       return ''
     start = self._end
     s = start
     html = self._rootNode.html
+    if end:
+      e = html.find(end,s)
+      if e>s:
+        return removeHtml(html[s:e],'',None)
+      return ""
     while True:
       end = html.find('<',s)
       r = html.find('>',s)
@@ -196,43 +236,6 @@ class RegexDict(Dict):
     if(not self.html): return None
     self['html'] = trimHtml(self.html)
     return self.html
-
-  # def contains(self, value, attr='html'):
-  #   if(self[attr]==None): return False
-  #   if isinstance(value, list):
-  #     for r in value:
-  #       if self[attr].find(r)<0:
-  #         return False
-  #   else:
-  #     if value and self[attr].find(value)<0:
-  #       return False
-  #   return True
-  # def containsOr(self, value, attr='html'):
-  #   if(self[attr]==None): return False
-  #   if isinstance(value, list):
-  #     for r in value:
-  #       if self[attr].find(r)>=0:
-  #         return True
-  #     return False
-  #   else:
-  #     if value and self[attr].find(value)<0:
-  #       return False
-  #   return True
-
-  # def notContains(self, value, attr='html'):
-  #   if(self[attr]==None): return True
-  #   if isinstance(value, list):
-  #     for r in value:
-  #       if self[attr].find(r)>=0:
-  #         return False
-  #   else:
-  #     if not value or self[attr].find(value)>=0:
-  #       return False
-  #   return True
-    
-  # def containsReg(self, value, attr='html'):
-  #   if(not self[attr]): return False
-  #   return checkContains(self[attr], value)
 
   def _convert2lst(self,eles,parent=None,s=None):
     lst=List()
@@ -283,10 +286,6 @@ class RegexDict(Dict):
     return eles
 def _getValue(_ele,attr):
   return _ele.__getattr__(attr)
-  # if attr in ['text','innerText']: return _ele.text
-  # elif attr in ['innerHtml']: return _ele.html
-  # else: 
-  #   return _ele[attr]
 def _select(_self,value,start=None,end=None,before=None):
   if value == None: return None
   s = value.find('(')
@@ -395,8 +394,3 @@ def RegexDictNew(dic,root,parent=None,s=None):
   ele._rootNode=root
   ele._parentNode=parent
   return ele
-# def convert2rdicLst(lst):
-#   eles = List()
-#   for l in lst:
-#     eles.append(RegexDict(l))
-#   return eles

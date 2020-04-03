@@ -3,13 +3,14 @@
 import os,io,json
 import sys
 from simplified_scrapy.core.config_helper import Configs
+from simplified_scrapy.core.cookiestroe_base import CookieStoreBase
 if sys.version_info.major == 2:
   from urlparse import urlparse
 else:
   import urllib
   urlparse = urllib.parse.urlparse
   
-class SqliteCookieStore:
+class SqliteCookieStore(CookieStoreBase):
   _cookies={}
   _preKey = 'cookie_'
   
@@ -20,7 +21,7 @@ class SqliteCookieStore:
     domain = urlparse(url).netloc
     cookie = self._getCookie(domain)
     if(not cookie):
-      start = domain.index('.')+1
+      start = domain.find('.')+1
       domain = domain[start:]
       cookie = self._getCookie(domain)
     return cookie
@@ -28,7 +29,7 @@ class SqliteCookieStore:
   def _getCookie(self, domain):
     cookie = self._cookies.get(domain)
     if(not cookie and domain not in self._cookies):
-      cookie = Configs.getValue(self._preKey+domain)
+      cookie = Configs().getValue(self._preKey+domain)
       self._cookies[domain] = cookie
     return cookie
 
@@ -46,7 +47,7 @@ class SqliteCookieStore:
       for line in cookie:
         self._parseCookie(line,kvs)
     strCookie = self._dic2str(kvs)
-    Configs.setValue(self._preKey+domain,strCookie)
+    Configs().setValue(self._preKey+domain,strCookie)
     self._cookies[domain] = strCookie
   def _dic2str(self, dic):
     strs=None

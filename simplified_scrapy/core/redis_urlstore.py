@@ -3,11 +3,13 @@
 import redis,json,random
 import sys
 from simplified_scrapy.core.utils import printInfo,convertUrl2Int,md5
+from simplified_scrapy.core.urlstore_base import UrlStoreBase
 
-class RedisUrlStore():
+class RedisUrlStore(UrlStoreBase):
   _queueName = 'url_queue_'
   _setName = 'url_set_'
   _multiQueue = False
+  _duplicateRemoval = True
   def __init__(self, name, setting=None):
     self._queueName=self._queueName+name
     self._setName=self._setName+name
@@ -24,6 +26,8 @@ class RedisUrlStore():
         self._setName=setting.get('setName')
       if(setting.get('multiQueue')):
         self._multiQueue = setting.get('multiQueue')
+      if setting.get('duplicateRemoval'):
+        self._duplicateRemoval = setting.get('duplicateRemoval')
     self._pool = redis.ConnectionPool(host=self._host, port=self._port,db=1)
     _r = redis.Redis(host=self._host, port=self._port,db=1)
     _r.ping()
@@ -49,13 +53,12 @@ class RedisUrlStore():
     count = _r.llen(self._queueName)
     return count
   def checkUrl(self,url):
+    if not self._duplicateRemoval: return False
     _r = redis.Redis(connection_pool=self._pool)
     result = _r.sadd(self._setName, md5(url))
     return not result
   def saveUrl(self, urls,i=None):
     _r = redis.Redis(connection_pool=self._pool)
-    # if (type(urls).__name__=='dict'):
-    #   urls=urls["Urls"]
     for url in urls:
       if(not isinstance(url,dict)):
         url={'url':url}
@@ -71,6 +74,8 @@ class RedisUrlStore():
     if(not self._multiQueue or not url): return None
     return convertUrl2Int(url)
 
+  def clearUrl(self):
+    pass
   def resetUrls(self, urls):
     _r = redis.Redis(connection_pool=self._pool)
     for url in urls:

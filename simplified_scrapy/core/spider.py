@@ -29,6 +29,8 @@ class Spider():
   refresh_urls = False
   stop = False
   encodings = {}
+  request_tm = False
+  save_html = True
   def __init__(self, name=None):
     try:
       if name is not None:
@@ -38,16 +40,12 @@ class Spider():
       if not hasattr(self, 'start_urls'):
         self.start_urls = []
       if not hasattr(self, 'url_store'):
-        # printInfo('init url_store------------------------')
         self.url_store = SqliteUrlStore(self.name)
       if not hasattr(self, 'html_store'):
-        # printInfo('init html_store------------------------')
         self.html_store = SqliteHtmlStore(self.name)
       if not hasattr(self, "obj_store"):
-        # printInfo('init obj_store------------------------')
         self.obj_store = ObjStore(self.name)
       if not hasattr(self, "cookie_store"):
-        # printInfo('init cookie_store------------------------')
         self.cookie_store = SqliteCookieStore()
       if not self.refresh_urls:
         self.url_store.saveUrl(self.start_urls,0)
@@ -84,8 +82,6 @@ class Spider():
     if(not obj): obj = self.login_data
     if(obj and obj.get('url')):
       data = obj.get('data')
-      # if(data and isinstance(data,dict)): 
-      #   data = json.dumps(data)
       if(obj.get('method')=='get'):
         return requestGet(obj.get('url'),obj.get('headers'),obj.get('useProxy'),self)
       else:
@@ -126,7 +122,10 @@ class Spider():
     return self.html_store.popHtml(state)
   def saveHtml(self,url,html):
     if(html):
-      self.html_store.saveHtml(url,html)
+      if self.save_html:
+        self.html_store.saveHtml(url,html)
+      else:
+        return self.extract(Dict(url),html,None,None)
   def updateHtmlState(self,id,state):
     self.html_store.updateState(id,state)
     
@@ -173,16 +172,17 @@ class Spider():
         if(obj.get("Urls")):
           self.saveUrl(obj.get("Urls"))
         ds = obj.get("Data")
-        if(ds and len(ds) > 0):
-          for d in ds:
-            self.saveObj(d)
-            # self.obj_store.saveObj(d)
+        if(ds):
+          if isinstance(ds,list):
+            for d in ds:
+              self.saveObj(d)
+          else:
+            self.saveObj(ds)
   def saveObj(self,data):
     self.obj_store.saveObj(data)
 
   def extract(self, url,html,models,modelNames):
     if(not modelNames):
-      # printInfo('model not configured')
       return False
     else:
       return extractHtml(url["url"],html,models,modelNames,url.get("title"))
@@ -202,7 +202,7 @@ class Spider():
       if url: self._downloadPageNum=self._downloadPageNum+1
       return url
     else:
-      printInfo('Downloads are too frequent')
+      return {}
     return None
   def urlCount(self):
     return self.url_store.getCount()
@@ -213,6 +213,8 @@ class Spider():
 
   def plan(self):
     return []
+  def clearUrl(self):
+    self.url_store.clearUrl()
 
   def resetUrlsTest(self):
     self.url_store.resetUrls(self.start_urls)
@@ -228,10 +230,10 @@ class Spider():
           minute = p.get('minute')
         planTime = time.strptime(u"{}-{}-{} {}:{}:00".format(now[0],now[1],now[2],hour,minute), "%Y-%m-%d %H:%M:%S")
         configKey = u"plan_{}".format(self.name)
-        _lastResetTime=Configs.getValue(configKey)
+        _lastResetTime=Configs().getValue(configKey)
         if(now > planTime and (not _lastResetTime or convertStr2Time(_lastResetTime)<planTime)):
           self.url_store.resetUrls(self.start_urls)
-          Configs.setValue(configKey, convertTime2Str(planTime))
+          Configs().setValue(configKey, convertTime2Str(planTime))
           return
 
 

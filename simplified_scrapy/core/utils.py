@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
-import time,io,sys,hashlib,os,re
+import time,io,sys,hashlib,os,re,csv
+from time import mktime
 if sys.version_info.major == 2:
   from urlparse import urlparse,urljoin
 else:
@@ -9,23 +10,30 @@ def getTime(t):
   return time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(t))
 def getTimeNow():
   return getTime(time.time())
-def convertTime2Str(t):
-  return time.strftime('%Y-%m-%d %H:%M:%S', t)
-def convertStr2Time(st):
-  return time.strptime(st, "%Y-%m-%d %H:%M:%S")
+def convertTime2Str(t,format='%Y-%m-%d %H:%M:%S'):
+  return time.strftime(format, t)
+def convertStr2Time(st,format='%Y-%m-%d %H:%M:%S'):
+  return mktime(time.strptime(st, format))
+__lastMsg=None
 def printInfo(*msgs):
-    print(getTime(time.time()),msgs)
+  global __lastMsg
+  if __lastMsg==msgs[0]:
+    return
+  __lastMsg = msgs[0]
+  print(getTime(time.time()),msgs)
 
-# def printError(addr,err):
-#   printInfo(addr, err.message)
-
-def saveFile(name,text,encoding="utf-8"):
-  file = io.open(name, "w",encoding=encoding)
-  try:
+def save2csv(name,rows,encoding="utf-8",mode='w'):
+  if 'b' in mode: encoding=None
+  with io.open(name, mode=mode,encoding=encoding) as f: 
+    csv_writer = csv.writer(f)
+    csv_writer.writerows(rows)
+def saveFile(name,text,encoding="utf-8",mode='w'):
+  if 'b' in mode: encoding=None
+  with io.open(name, mode=mode,encoding=encoding) as file:
     file.write(u'{}\n'.format(text))
-  except Exception as err:
-    printInfo(err,name)
-  file.close()
+def appendFile(name,text,encoding="utf-8"):
+  with io.open(name, 'a',encoding=encoding) as file:
+    file.write(u'{}\n'.format(text))
 def getFileContent(name,encoding="utf-8"):
   file = io.open(name, "r",encoding=encoding)
   try:
@@ -51,16 +59,61 @@ def getFileModifyTime(name):
 
 def isExistsFile(name):
   return os.path.isfile(name)
+
+def removeFile(name):
+  if isExistsFile(name):
+    os.remove(name)
+
 def isExistsDir(name):
   return os.path.isdir(name)
+def createDir(name,count=1):
+  name = name.rstrip('/')
+  if count>1:
+    paths = name.rsplit('/',count-1)
+  else:
+    paths = [name.rstrip('/')]
+  p = ''
+  for i in range(0,count):
+    p = p + paths[i] +'/'
+    if(not os.path.exists(p)):
+      os.mkdir(p)
+def getSubDir(name,end=None,have=None,notHave=None):
+  filelist = os.listdir(name)
+  if have or notHave or end:
+    filelist = [os.path.join(name,l) for l in filelist if _checkName(l,end,have,notHave)]
+    # filelist = [l for l in filelist if _checkName(l,end,have,notHave)]
+  return filelist
+def getSubFile(name,end=None,have=None,notHave=None):
+  filelist = getSubDir(name,end,have,notHave)
+  filelist = [l for l in filelist if isExistsFile(l)]
+  return filelist
+def getSubFolder(name,end=None,have=None,notHave=None):
+  filelist = getSubDir(name,end,have,notHave)
+  filelist = [l for l in filelist if isExistsDir(l)]
+  return filelist
 
-def appendFile(name,text,encoding="utf-8"):
-  file = io.open(name, "a",encoding=encoding)
+def _checkName(name,end,have,notHave):
+  if end and not name.endswith(end):
+    return False
+  if have and have not in name:
+    return False
+  if notHave and notHave in name:
+    return False
+  return True
+
+def saveResponseAsFile(res,path,fileType=None):
   try:
-    file.write(u'{}\n'.format(text))
+    if fileType:
+      if sys.version_info.major == 2: maintype = res.headers.type
+      else: maintype =res.info().get('Content-Type')
+    if not fileType or (maintype and maintype.find(fileType)>=0):
+      file = io.open(path, "wb")
+      file.write(res.read())
+      file.close()
+      return True
   except Exception as err:
-    printInfo(err,name)
-  file.close()
+    print (err)
+  return False
 
 def convertUrl2Int(url,count=10):
   value = urlparse(url).netloc

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
 import json,sqlite3,logging,time,os
-import sys
+import sys,threading
 from simplified_scrapy.core.utils import printInfo
 class ConfigHelper():
   _dbPath = 'db/config.db'
@@ -69,4 +69,14 @@ class ConfigHelper():
     except Exception as err:
       self.log(err)
     conn.close()
-Configs = ConfigHelper()
+# Configs = ConfigHelper()
+__configsObj = None
+__lock = threading.Lock()
+def Configs():
+  global __configsObj
+  if not __configsObj:
+    __lock.acquire()
+    if not __configsObj:
+      __configsObj = ConfigHelper()
+    __lock.release()
+  return __configsObj

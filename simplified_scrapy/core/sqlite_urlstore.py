@@ -3,18 +3,22 @@
 import json,random,sqlite3,logging,os
 import sys
 from simplified_scrapy.core.utils import printInfo,getTimeNow,md5
+from simplified_scrapy.core.urlstore_base import UrlStoreBase
   
-class SqliteUrlStore():
+class SqliteUrlStore(UrlStoreBase):
   _dbPath = 'db/{}.db'
   _tbName = 'urls'
+  _duplicateRemoval = True
   def log(self, msg, level=logging.ERROR):
     printInfo(msg)
     logger = logging.getLogger()
     logging.LoggerAdapter(logger, None).log(level, msg)
 
-  def __init__(self,name):
+  def __init__(self,name, setting=None):#,duplicateRemoval=True):
     if(not os.path.exists('db/')):
       os.mkdir('db/')
+    if setting and setting.get('duplicateRemoval')!=None:
+      self._duplicateRemoval = setting.get('duplicateRemoval')
     self._dbPath = self._dbPath.format(name)
     conn = None
     try:
@@ -25,8 +29,9 @@ class SqliteUrlStore():
             json TEXT NOT NULL,
             state INT NOT NULL DEFAULT 0,
             tm  TEXT);''')
-      c.execute('''CREATE TABLE IF NOT EXISTS dic
-            (id TEXT PRIMARY KEY NOT NULL);''')
+      # if duplicateRemoval:
+      #   c.execute('''CREATE TABLE IF NOT EXISTS dic
+      #         (id TEXT PRIMARY KEY NOT NULL);''')
       conn.commit()
     except Exception as err:
       self.log(err)
@@ -62,11 +67,12 @@ class SqliteUrlStore():
     return count
 
   def checkUrl(self,url):
+    if not self._duplicateRemoval: return False
     conn = sqlite3.connect(self._dbPath)
     try:
+      flag=False
       id = md5(url)
       cursor = conn.cursor().execute("select id from urls where id='{}' limit 0,1".format(id))
-      flag=False
       for row in cursor:
         flag = True
     except Exception as err:
@@ -84,7 +90,7 @@ class SqliteUrlStore():
         id = md5(url["url"])
       if(not self.checkUrl(url["url"])):
         datas.append((id,json.dumps(url),getTimeNow()))
-    if not len(datas): return
+    if not datas: return
     conn = sqlite3.connect(self._dbPath)
     try:
       cursor = conn.cursor()
@@ -95,6 +101,16 @@ class SqliteUrlStore():
       self.log(err)
     conn.close()
 
+  def clearUrl(self):
+    conn = sqlite3.connect(self._dbPath)
+    flag = False
+    try:
+      conn.cursor().execute("DELETE from urls")
+      conn.commit()
+    except Exception as err:
+      self.log(err)
+    conn.close()
+    return flag
   def resetUrls(self, urls):
     datas=[]
     for url in urls:

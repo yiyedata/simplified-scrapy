@@ -3,6 +3,7 @@
 import os,io,json
 import sys
 from simplified_scrapy.core.dictex import Dict
+from simplified_scrapy.core.cookiestroe_base import CookieStoreBase
 if sys.version_info.major == 2:
   from urlparse import urlparse
 else:
@@ -18,7 +19,7 @@ class MemCookieStore:
     domain = urlparse(url).netloc
     cookie = self._getCookie(domain)
     if(not cookie):
-      start = domain.index('.')+1
+      start = domain.find('.')+1
       domain = domain[start:]
       cookie = self._getCookie(domain)
     return cookie

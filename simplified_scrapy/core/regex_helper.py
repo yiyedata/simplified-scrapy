@@ -6,6 +6,11 @@ from simplified_scrapy.core.utils import printInfo,absoluteUrl,md5
 from simplified_scrapy.core.xml_helper import XmlDictConfig,convert2Dic
 from simplified_scrapy.core.dictex import Dict
 
+__regCache={}
+def _getRegex(regex):
+  if not __regCache.get(regex):
+    __regCache[regex] = re.compile(regex)
+  return __regCache[regex]
 def getSection(html,start=None,end=None,before=None):
   if not html: return (0,0)
   s = 0
@@ -47,10 +52,10 @@ def listA(html,baseUrl=None,start=None,end=None,before=None):
   html = html[s:e]
   if(not html or html.find("<a")<0): return []
 
-  patternLst = re.compile(u'<a[\s]+[^>]*>[\s\S]*?</a>')
-  patternUrl = re.compile(u'href[\s=]+[\'"](?P<url>.*?)[\'"]') 
-  patternTitle1 = re.compile(u'title[\s=]+[\'"](?P<title>.*?)[\'"]')
-  patternTitle2 = re.compile(u'<a[\s]+[^>]*>(?P<title>.*?)</a>')
+  patternLst = _getRegex(u'<a[\s]+[^>]*>[\s\S]*?</a>')
+  patternUrl = _getRegex(u'href[\s]*=[\s\'"]*(?P<url>.*?)[\'"\s>]') 
+  patternTitle1 = _getRegex(u'title[\s]*=[\s\'"]*(?P<title>.*?)[\'"\s>]')
+  patternTitle2 = _getRegex(u'<a[\s]+[^>]*>(?P<title>.*?)</a>')
 
   strA = patternLst.findall(html)
   dic = Dict()
@@ -66,7 +71,7 @@ def listA(html,baseUrl=None,start=None,end=None,before=None):
       tmp = patternTitle2.search(i)
       if tmp: 
         title = tmp.group("title")
-        title = re.compile('<[\s\S]*?>').sub('',title)
+        title = _getRegex('<[^<>]+>').sub('',title)
 
     try:
       if(url):
@@ -102,7 +107,7 @@ def getListByReg(html,regex,group=0,start=None,end=None,before=None):
   if(s < 0 or e < s): return []
   html = html[s:e]
   if not group:
-    patternLst = re.compile(regex)
+    patternLst = _getRegex(regex)
     strs = patternLst.findall(html)
   else:
     strs = []
@@ -123,7 +128,7 @@ def getOneByReg(html,regex,group=0,start=None,end=None,before=None):
   e = section[1]
   if(s < 0 or e < s): return None
   html = html[s:e]
-  patternLst = re.compile(regex)
+  patternLst = _getRegex(regex)
   tmp = patternLst.search(html)
   if tmp:
     return tmp.group(group)
@@ -139,9 +144,9 @@ def listImg(html,baseUrl=None,start=None,end=None,before=None):
   html = html[s:e]
   if(not html or html.find("<img")<0): return None
 
-  patternLst = re.compile(u'<img[\s]+[^>]*>')
-  patternUrl = re.compile(u'src[\s=]+[\'"](?P<url>.*?)[\'"]') 
-  patternTitle = re.compile(u'alt[\s=]+[\'"](?P<title>.*?)[\'"]')
+  patternLst = _getRegex(u'<img[\s]+[^>]*>')
+  patternUrl = _getRegex(u'src[\s]*=[\s\'"]*(?P<url>.*?)[\'"\s>]') 
+  patternTitle = _getRegex(u'alt[\s]*=[\s\'"]*(?P<title>.*?)[\'"\s>]')
   lstStr = patternLst.findall(html)
   # lst=[]
   dic = Dict()
@@ -180,11 +185,8 @@ def listImg(html,baseUrl=None,start=None,end=None,before=None):
       printInfo(ex)
     
   return list(dic.values())
-__re0=re.compile('<[^><]+>')
+__re0=re.compile('<[^<>]+>')
 def preDealHtml(html):
-  # html = re.compile('[\s]*>').sub('>',html)
-  # html = re.compile('<[\s]*').sub('<',html) # script?
-  # html = re.compile('[\s]*/>').sub(' />',html) # script?
   html = __re0.sub(_replaceHtml,html) # script?
   return html
 __re1=re.compile('[\s]*>')
@@ -200,15 +202,15 @@ def _replaceHtml(value):
 
 def removeScripts(html):
   if (not html): return html
-  html = re.compile('<!--[\s\S]*?-->').sub('',html)
-  html = re.compile('<[\s]*script[^>]*>[\s\S]*?</script>').sub('',html)
-  html = re.compile('<[\s]*style[^>]*>[\s\S]*?</style>').sub('',html)
-  html = re.compile('<[\s]*link [\s\S]*?>').sub('',html)
-  html = re.compile('<[\s]*meta [\s\S]*?>').sub('',html)
-  html = re.compile('<[\s]*object[^>]*>[\s\S]*?</object>').sub('',html)
-  html = re.compile('<[\s]*iframe[^>]*>[\s\S]*?</iframe>').sub('',html)
-  html = re.compile('</object>').sub('',html)
-  html = re.compile('<param [\s\S]*?/>').sub('',html)
+  html = _getRegex('<!--[\s\S]*?-->').sub('',html)
+  html = _getRegex('<[\s]*script[^>]*>[\s\S]*?</script>').sub('',html)
+  html = _getRegex('<[\s]*style[^>]*>[\s\S]*?</style>').sub('',html)
+  html = _getRegex('<[\s]*link [\s\S]*?>').sub('',html)
+  html = _getRegex('<[\s]*meta [\s\S]*?>').sub('',html)
+  html = _getRegex('<[\s]*object[^>]*>[\s\S]*?</object>').sub('',html)
+  html = _getRegex('<[\s]*iframe[^>]*>[\s\S]*?</iframe>').sub('',html)
+  html = _getRegex('</object>').sub('',html)
+  html = _getRegex('<param [\s\S]*?>').sub('',html)
   return html
 def getElementsByTag(tag,html,start=None,end=None,before=None):
   lst=[]
@@ -274,9 +276,9 @@ def _getElementByTag(tag,html,start=None,end=None,before=None):
   if isinstance(tag,list) or html.find('<'+tag)<0: return None
   singleTag = _checkSingleTag(tag, html)
   if(singleTag):
-    pattern = re.compile(u'<'+_dealRegChar(tag)+'([\s]+|)[^>]*?>') 
+    pattern = _getRegex(u'<'+_dealRegChar(tag)+'([\s]+|)[^>]*?>') 
   else:
-    pattern = re.compile(u'<'+_dealRegChar(tag)+'([\s]+[^>]*?>|>)[\s\S]*?</'+_dealRegChar(tag)+'>') 
+    pattern = _getRegex(u'<'+_dealRegChar(tag)+'([\s]+[^>]*?>|>)[\s\S]*?</'+_dealRegChar(tag)+'>') 
   m = pattern.search(html)
   if m: 
     dom = m.group(0)
@@ -314,8 +316,8 @@ def _getElementByTag(tag,html,start=None,end=None,before=None):
     return (ele,start,end)
   return None
 __reh0=re.compile('<!--[\s\S]*?-->')
-__reh1=re.compile('<[^<>]*?>')
-__reh2=re.compile('(\\s|&nbsp;)+')
+__reh1=re.compile('<[^<>]+>')
+__reh2=re.compile('(\s|&nbsp;)+')
 __reh3=re.compile('(\s*_yazz_\s*)+')
 def removeHtml(html,replace='',tags=None):
   if not html: return html
@@ -326,7 +328,7 @@ def removeHtml(html,replace='',tags=None):
     text = innerText
     if replace:
       for tag in tags:
-        text = re.compile('<[/]*'+tag+'[^<>]*?>').sub('_yazz_',text)
+        text = _getRegex('<[/]*'+tag+'[^<>]+>').sub('_yazz_',text)
     text = __reh1.sub('',text)
     if text == innerText:
       break
@@ -337,7 +339,7 @@ def removeHtml(html,replace='',tags=None):
   return innerText.strip().strip(replace)
 
 def replaceReg(html, regex, new, count = 0):
-  return re.sub(re.compile(regex), new, html, count)
+  return re.sub(_getRegex(regex), new, html, count)
 
 def trimHtml(html):
   if(not html): return html
@@ -360,7 +362,7 @@ def getElementByID(id,html,start=None,end=None,before=None):
   return getElementByAttr('id',id,html,start,end,before)
   
 def checkContains(html, reg):
-  return not not re.compile(reg).search(html)
+  return not not _getRegex(reg).search(html)
 
 def _getTag(html, end, attr, start=None):
   if start==None: start = html.rfind('<',0,end)
@@ -369,14 +371,12 @@ def _getTag(html, end, attr, start=None):
   if(start >= 0 and end-start<300):
     if(attr and html[start:end].find(attr)<0):
       return None
-    pattern = re.compile(u'<?(?P<tag>[\S]*?)[\s/>]')
+    pattern = _getRegex(u'<?(?P<tag>[\S]*?)[\s/>]')
     html = html[start:end]
     tmp = pattern.search(html)
     if tmp: 
       tag = tmp.group("tag")
       return tag
-      # if(re.compile(u'^[0-9a-zA-Z:_.-]+$').match(tag)):
-      #   return tag
   return None
 def getElementsByClass(className,html,start=None,end=None,before=None):
   lst=[]
@@ -403,7 +403,7 @@ def getElements(tag,attr='class',value=None,html=None,start=None,end=None,before
       lst.append(obj[0])
       # h=h[obj[2]:]
       s=obj[0]._end
-      end=None
+      before=None
     else:
       break
   return lst
@@ -464,10 +464,10 @@ def _getElement(tag,attr='class',value=None,html=None,start=None,end=None,before
     singleTag = _checkSingleTag(tag,html,index)
     value = _dealRegChar(value)
     if(singleTag):
-      strP = u'<'+_dealRegChar(tag)+'[\s]+[^>]*?'+_dealRegChar(attr)+'[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)'+value+'[\s\'"][\s\S]*?>'
+      strP = u'<'+_dealRegChar(tag)+'[\s]+[^>]*?'+_dealRegChar(attr)+'[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)'+value+'([\s\'"][\s\S]*?|)>'
     else:
-      strP = u'<'+_dealRegChar(tag)+'[\s]+[^>]*?'+_dealRegChar(attr)+'[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)'+value+'[\s\'"][\s\S]*?>[\s\S]*?</'+_dealRegChar(tag)+'>'
-    pattern = re.compile(strP) 
+      strP = u'<'+_dealRegChar(tag)+'[\s]+[^>]*?'+_dealRegChar(attr)+'[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)'+value+'([\s\'"][\s\S]*?|)>[\s\S]*?</'+_dealRegChar(tag)+'>'
+    pattern = _getRegex(strP) 
     m = pattern.search(html)
     if m: 
       dom = m.group(0)
@@ -519,7 +519,7 @@ def _dealRegChar(value):
     value = value.replace(kv[0],kv[1])
   return value
 def _getStartByReg(regex,html,start):
-  pattern = re.compile(regex) 
+  pattern = _getRegex(regex) 
   m = pattern.search(html[start:])
   if m: 
     dom = m.group(0)
@@ -766,7 +766,7 @@ def getChild(html,tag=None,start=None,end=None,before=None):
       return obj[0]
   return None
 def _getNextTag(html,start):
-  pattern = re.compile(u'<[\s]*(?P<tag>[a-zA-Z0-9:_.-]+?)[/>\s]')
+  pattern = _getRegex(u'<[\s]*(?P<tag>[a-zA-Z0-9:_.-]+?)[/>\s]')
   tmp = pattern.search(html[start:])
   if tmp: 
     return tmp.group("tag")

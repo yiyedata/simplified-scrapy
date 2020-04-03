@@ -4,8 +4,9 @@ from pymongo import MongoClient
 import json,random,random
 import sys
 from simplified_scrapy.core.utils import printInfo,convertUrl2Int,md5
+from simplified_scrapy.core.urlstore_base import UrlStoreBase
 
-class MongoUrlStore():
+class MongoUrlStore(UrlStoreBase):
   _host = '127.0.0.1'
   _port = 27017
   _dbName = 'python_db'
@@ -14,6 +15,7 @@ class MongoUrlStore():
   _multiQueue = False
   _tbCache = {}
   _totalCount = {}
+  _duplicateRemoval = True
   def __init__(self,name, setting=None):
     self._tbName = self._tbName+name
     self._dicName = self._dicName+name
@@ -28,6 +30,8 @@ class MongoUrlStore():
         self._tbName=setting.get('tbName')
       if(setting.get('multiQueue')):
         self._multiQueue = setting.get('multiQueue')
+      if setting.get('duplicateRemoval'):
+        self._duplicateRemoval = setting.get('duplicateRemoval')
   def _connect(self):
     conn = MongoClient(self._host, self._port)
     return conn[self._dbName]
@@ -67,6 +71,7 @@ class MongoUrlStore():
     return total
 
   def checkUrl(self,url,i):
+    if not self._duplicateRemoval: return False
     db = self._connect()
     id = md5(url)
     tbName = self._tbName
@@ -105,6 +110,8 @@ class MongoUrlStore():
     if(not self._multiQueue or not url): return None
     return convertUrl2Int(url)
 
+  def clearUrl(self):
+    pass
   def resetUrls(self, urls):
     db = self._connect()
     for url in urls:

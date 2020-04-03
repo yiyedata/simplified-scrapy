@@ -1,6 +1,12 @@
 #!/usr/bin/python
 #coding=utf-8
 class List(list):
+  def __getattr__(self,attr):
+    tmp = List()
+    for l in self:
+      tmp.append(l.__getattr__(attr))
+    return tmp
+
   def equal(self, value, attr='class'):
     tmp=List()
     for l in self:
@@ -40,4 +46,35 @@ class List(list):
       self.remove(t)
     return self
 
+# class List(_List):
+  def nextText(self, end=None):
+    tmp = List()
+    for l in self:
+      tmp.append(l.nextText(end))
+    return tmp
+  def select(self,value,start=None,end=None,before=None):
+    tmp = List()
+    for l in self:
+      tmp.append(l.select(value,start,end,before))
+    return tmp
+  def selects(self,value,start=None,end=None,before=None):
+    tmp = List()
+    for l in self:
+      tmp.append(l.selects(value,start,end,before))
+    return tmp
+  def getElement(self,tag,attr='class',value=None,start=None,end=None,before=None):
+    tmp = List()
+    for l in self:
+      tmp.append(l.getElement(tag,attr,value,start,end,before))
+    return tmp
+  def getElements(self,tag,attr='class',value=None,start=None,end=None,before=None):
+    tmp = List()
+    for l in self:
+      tmp.append(l.getElements(tag,attr,value,start,end,before))
+    return tmp
+  def getTable(self,body='tbody',columns=None,rowReg=None,colReg=None,start=None,end=None,before=None):
+    tmp = List()
+    for l in self:
+      tmp.append(l.getTable(body,columns,rowReg,colReg,start=start,end=end,before=before))
+    return tmp
   
