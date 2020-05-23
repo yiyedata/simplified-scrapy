@@ -52,6 +52,11 @@ class List(list):
     for l in self:
       tmp.append(l.nextText(end))
     return tmp
+  def previousText(self):
+    tmp = List()
+    for l in self:
+      tmp.append(l.previousText())
+    return tmp
   def select(self,value,start=None,end=None,before=None):
     tmp = List()
     for l in self:
@@ -77,4 +82,8 @@ class List(list):
     for l in self:
       tmp.append(l.getTable(body,columns,rowReg,colReg,start=start,end=end,before=before))
     return tmp
-  
+  def getNext(self,tag=None):
+    tmp = List()
+    for l in self:
+      tmp.append(l.getNext(tag))
+    return tmp
