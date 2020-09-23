@@ -23,6 +23,31 @@ class RegexDict(Dict):
         elif attr == 'html':
             return ''
         else:
+            if attr == 'selfHtml':
+                h = '<' + self.tag
+                endFlag = False
+                if self.html:
+                    endFlag = True
+                elif self._rootNode:
+                    endFlag = self._rootNode.html.endswith(
+                        '</' + self.tag + '>', self._start, self._end)
+
+                if self.keyOrder:
+                    for k in self.keyOrder:
+                        v = self.get(k)
+                        if v != None:
+                            h += ' ' + k + '="' + self.get(k) + '"'
+                else:
+                    for k, v in self.items():
+                        if k == 'tag' or k == 'html': continue
+                        if v != None:
+                            h += ' ' + k + '="' + self.get(k) + '"'
+                if endFlag:
+                    h += '>' + self.html + '</' + self.tag + '>'
+                else:
+                    h += ' />'
+
+                return h
             if attr == 'outerHtml':
                 if self._rootNode:
                     return self._rootNode.html[self._start:self._end]
@@ -267,6 +292,8 @@ class RegexDict(Dict):
         return removeHtml(self.get('html'), separator, tags)
 
     def setContent(self, text):
+        if isinstance(text, Dict):
+            text = text.selfHtml
         html = self.outerHtml
         oldEnd = self._end
         start = html.find('>')
@@ -277,6 +304,18 @@ class RegexDict(Dict):
         self._rootNode['html'] = h[0:self._start] + html + h[self._end:]
         self._end = self._start + len(html)  #+1
         _updatePosition(self._rootNode, self._start, self._end, oldEnd)
+
+    # TODO: add space
+    def appendChild(self, html):
+        if isinstance(html, Dict):
+            html = html.selfHtml
+        self.setContent(self.html + html)
+
+    # TODO: add space
+    def insertChild(self, html):
+        if isinstance(html, Dict):
+            html = html.selfHtml
+        self.setContent(html + self.html)
 
     def setAttrs(self, attrs):
         if not attrs or not isinstance(attrs, dict):
@@ -316,7 +355,10 @@ class RegexDict(Dict):
             self[key] = value
         _updatePosition(self._rootNode, self._start, self._end, oldEnd)
 
+    # TODO: add space
     def insertBefore(self, html):
+        if isinstance(html, Dict):
+            html = html.selfHtml
         h = self._rootNode.html
         oldEnd = self._end
         h = h[0:self._start] + html + h[self._start:self._end] + h[self._end:]
@@ -326,14 +368,35 @@ class RegexDict(Dict):
         self._end += n
         _updatePosition(self._rootNode, self._start, self._end, oldEnd)
 
+    # TODO: add space
     def insertAfter(self, html):
+        if isinstance(html, Dict):
+            html = html.selfHtml
         h = self._rootNode.html
         h = h[0:self._start] + h[self._start:self._end] + html + h[self._end:]
         self._rootNode['html'] = h
         _updatePosition(self._rootNode, self._start, self._start + len(html),
                         self._start)
 
+    def remove(self):
+        oldEnd = self._end
+        h = self._rootNode.html
+        s = h.rfind('\n', 0, self._start)
+        e = h.find('\n', self._end)
+        if s >= 0 and e >= 0:
+            tmp = h[s:self._start] + h[self._end:e]
+            if not tmp.strip():
+                self._start = s
+        h = h[0:self._start] + h[self._end:]
+        self._rootNode['html'] = h
+        _updatePosition(self._rootNode, self._start, self._start, oldEnd)
+        self._start = 0
+        self._end = 0
+        self.clear()
+
     def repleaceSelf(self, html):
+        if isinstance(html, Dict):
+            html = html.selfHtml
         oldEnd = self._end
         h = self._rootNode.html
         h = h[0:self._start] + html + h[self._end:]
@@ -481,7 +544,7 @@ class RegexDict(Dict):
             _ele = ele
             if not _ele:
                 return List()
-        tag, attr, value = _getParas(values[N - 1])
+        tag, attr, value = _getParas(values[N - 1].strip())
         eles = _ele.getElements(tag,
                                 attr,
                                 value,
@@ -599,10 +662,10 @@ def _getParas(value):
         para = paras[i]
         if para == '.':
             attr = 'class'
-            value = paras[i + 1]
+            value = paras[i + 1].strip()
         if para == '#':
             attr = 'id'
-            value = paras[i + 1]
+            value = paras[i + 1].strip()
         if para == '@':
             kv = paras[i + 1].split('=')
             attr = kv[0].strip()
@@ -612,7 +675,7 @@ def _getParas(value):
             continue
         i += 1
     if N == 0 or '.#@'.find(paras[0]) < 0:
-        tag = paras[0]
+        tag = paras[0].strip()
     return tag.split('|') if tag else None, attr, value
 
 

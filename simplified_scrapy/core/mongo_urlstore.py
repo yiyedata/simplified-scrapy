@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
 from pymongo import MongoClient
-import json,random,random
+import json,random
 import sys
 from simplified_scrapy.core.utils import printInfo,convertUrl2Int,md5
 from simplified_scrapy.core.urlstore_base import UrlStoreBase

@@ -2,7 +2,6 @@
 #coding=utf-8
 import logging
 import threading, traceback, time, importlib, imp, os, json, io
-from queue import Queue
 from imp import reload
 from simplified_scrapy.dictex import Dict
 from concurrent.futures import ThreadPoolExecutor
@@ -11,8 +10,11 @@ from simplified_scrapy.downloader import execDownload
 from simplified_scrapy.extracter import Extracter
 import sys
 if sys.version_info.major == 2:
+    from Queue import *
     reload(sys)
     sys.setdefaultencoding('utf-8')
+else:
+    from queue import Queue
 try:
     from setting import SETTINGFILE
 except ImportError:
@@ -32,6 +34,7 @@ class _SimplifiedMain():
             self._disable_extract = disable_extract
             self._extractQueue = None
         except Exception as err:
+            self.log("main.__init__", logging.ERROR)
             self.log(err, logging.ERROR)
 
     def _init(self, ssp=None):
@@ -43,6 +46,7 @@ class _SimplifiedMain():
             self._pool = ThreadPoolExecutor(
                 max_workers=self._settingObj["max_workers"])
         except Exception as err:
+            self.log("main._init", logging.ERROR)
             self.log(err, logging.ERROR)
 
     def refrashSSP(self):
@@ -60,6 +64,7 @@ class _SimplifiedMain():
                                 self.getSpider(spider['file'], spider["class"],
                                                settingObj.get('request_tm'))
                         except Exception as err:
+                            self.log("main.refrashSSP.1", logging.ERROR)
                             self.log(err, logging.ERROR)
 
                     keys = self._spiderDic.keys()
@@ -74,6 +79,7 @@ class _SimplifiedMain():
                         self.singleSSP.logged_in = self.singleSSP.login()
                     self._spiderDic[self.singleSSP.name] = self.singleSSP
             except Exception as err:
+                self.log("main.refrashSSP.2", logging.ERROR)
                 self.log(err, logging.ERROR)
             if (not settingObj.get("concurrency")):
                 settingObj["concurrency"] = 5
@@ -92,6 +98,7 @@ class _SimplifiedMain():
 
             self._settingObj = settingObj
         except Exception as err:
+            self.log("main.refrashSSP.3", logging.ERROR)
             self.log(err, logging.ERROR)
 
     def log(self, msg, level=logging.DEBUG):
@@ -109,11 +116,13 @@ class _SimplifiedMain():
     _started = False
     _spiderDic = Dict()
 
-    def startThread(self, ssp=None):
+    def startThread(self, ssp=None, setting=None):
         if (self._started): return
         self._started = True
 
         self._init(ssp)
+        if setting:
+            self._settingObj.update(setting)
         if (not self._settingObj["disable_extract"]
                 and not self._disable_extract):
             threadExtract = threading.Thread(target=self.extractThread)
@@ -171,6 +180,7 @@ class _SimplifiedMain():
                             lastUrl = None
                             print('waiting for new urls...')
             except Exception as err:
+                self.log("main.startThread", logging.ERROR)
                 self.log(err, logging.ERROR)
                 time.sleep(10)
             time.sleep(self._settingObj["intervalTime"])
@@ -263,6 +273,7 @@ class _SimplifiedMain():
             self._spiderDic[fileName] = ssp
             return ssp
         except Exception as err:
+            self.log("main.getSpider", logging.ERROR)
             self.log(err, logging.ERROR)
 
     def extractThread(self):
@@ -296,6 +307,7 @@ class _SimplifiedMain():
                         else:
                             time.sleep(0.01)
             except Exception as err:
+                self.log("main.extractThread", logging.ERROR)
                 self.log(err, logging.ERROR)
                 time.sleep(10)
             if (not flag):
@@ -324,6 +336,7 @@ class _SimplifiedMain():
                     self._downloadPagePer10s[1 - curIndex],
                     len(html) if html and state else 0)
         except Exception as err:
+            self.log("main.down_callback", logging.ERROR)
             self.log(err)
 
     def downloadRender(self, url, ssp):
@@ -358,6 +371,7 @@ class _SimplifiedMain():
                     self._downloadPagePer10s[1 - curIndex],
                     len(html) if html and state else 0)
         except Exception as err:
+            self.log("main.downloadThread2", logging.ERROR)
             self.log(err, logging.ERROR)
 
 

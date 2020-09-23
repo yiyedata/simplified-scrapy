@@ -134,12 +134,15 @@ def getListByReg(html, regex, group=0, start=None, end=None, before=None):
             else:
                 break
     return strs
-def regSearch(html,regex,group=0):
+
+
+def regSearch(html, regex, group=0):
     pattern = _getRegex(regex)
     tmp = pattern.search(html)
     if tmp:
         return tmp.group(group)
     return None
+
 
 def getOneByReg(html, regex, group=0, start=None, end=None, before=None):
     if (not html or not regex): return None
@@ -275,10 +278,25 @@ def getElementByTag(tag, html, start=None, end=None, before=None):
     return None
 
 
+__tags = ['br', 'hr', 'img', 'input', 'param', 'meta', 'link']
+
+
 def _checkSingleTag(tag, html=None, i=0):
-    tags = ['br', 'hr', 'img', 'input', 'param', 'meta', 'link']
-    if tag.lower() in tags: return True
     if not html: return False
+    if tag.lower() in __tags:
+        end = html.find('</' + tag + '>')
+        if end < 0:
+            return True
+        index = html.find('<' + tag + ' ')
+        if index < 0:
+            index = html.find('<' + tag + '>')
+        tmp = html[index + 2:end]
+        index = html.find('<' + tag + ' ')
+        if index < 0:
+            index = html.find('<' + tag + '>')
+        if index >= 0:
+            return True
+
     index1 = html.find('<' + tag + ' ', i)
     if index1 < 0:
         index1 = html.find('<' + tag + '/>', i)
