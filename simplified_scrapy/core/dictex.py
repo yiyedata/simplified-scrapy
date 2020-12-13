@@ -30,7 +30,7 @@ class Dict(dict):
 
     def equal(self, value, attr='class'):
         v = self.__getattr__(attr)
-        if (v == None): return False
+        if (not v): return False
         if isinstance(value, list):
             for r in value:
                 if v == r:
@@ -41,7 +41,7 @@ class Dict(dict):
 
     def contains(self, value, attr='html'):
         v = self.__getattr__(attr)
-        if (v == None): return False
+        if (not v): return False
         if isinstance(value, list):
             for r in value:
                 if v.find(r) < 0:
@@ -53,7 +53,7 @@ class Dict(dict):
 
     def containsOr(self, value, attr='html'):
         v = self.__getattr__(attr)
-        if (v == None): return False
+        if (not v): return False
         if isinstance(value, list):
             for r in value:
                 if v.find(r) >= 0:
@@ -66,7 +66,7 @@ class Dict(dict):
 
     def notContains(self, value, attr='html'):
         v = self.__getattr__(attr)
-        if (v == None): return True
+        if (not v): return True
         if isinstance(value, list):
             for r in value:
                 if v.find(r) >= 0:

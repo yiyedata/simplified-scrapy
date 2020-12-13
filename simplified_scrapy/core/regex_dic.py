@@ -1,7 +1,6 @@
 from simplified_scrapy.core.regex_helper import *
 from simplified_scrapy.core.request_helper import extractHtml
 from simplified_scrapy.extracter import ExtractModel
-from simplified_scrapy.core.utils import absoluteUrl
 from simplified_scrapy.core.dictex import Dict
 from simplified_scrapy.core.listex import List
 try:
@@ -13,7 +12,7 @@ except ImportError:
 class RegexDict(Dict):
     _rootNode = None
     _parentNode = None
-    _elements = None
+    _elements = {}
     _editFlag = True
 
     def __getattr__(self, attr):
@@ -24,13 +23,13 @@ class RegexDict(Dict):
             return ''
         else:
             if attr == 'selfHtml':
-                h = '<' + self.tag
+                h = '<' + self['tag']
                 endFlag = False
-                if self.html:
+                if self['html']:
                     endFlag = True
                 elif self._rootNode:
-                    endFlag = self._rootNode.html.endswith(
-                        '</' + self.tag + '>', self._start, self._end)
+                    endFlag = self._rootNode['html'].endswith(
+                        '</' + self['tag'] + '>', self._start, self._end)
 
                 if self.keyOrder:
                     for k in self.keyOrder:
@@ -43,16 +42,16 @@ class RegexDict(Dict):
                         if v != None:
                             h += ' ' + k + '="' + self.get(k) + '"'
                 if endFlag:
-                    h += '>' + self.html + '</' + self.tag + '>'
+                    h += '>' + self['html'] + '</' + self['tag'] + '>'
                 else:
                     h += ' />'
 
                 return h
             if attr == 'outerHtml':
                 if self._rootNode:
-                    return self._rootNode.html[self._start:self._end]
+                    return self._rootNode['html'][self._start:self._end]
             if attr == 'text':
-                return removeHtml(self.get('html'))  #['html'])
+                return removeHtml(self.get('html'))
             if attr == 'children':
                 return self.getChildren()
             if attr == 'child':
@@ -80,41 +79,41 @@ class RegexDict(Dict):
         return ""
 
     def listA(self, url=None, start=None, end=None, before=None):
-        if (not self.html): return List()
-        return List(listA(self.html, url, start, end, before))
+        if (not self['html']): return List()
+        return List(listA(self['html'], url, start, end, before))
 
     def listImg(self, url=None, start=None, end=None, before=None):
-        if (not self.html): return List()
-        return List(listImg(self.html, url, start, end, before))
+        if (not self['html']): return List()
+        return List(listImg(self['html'], url, start, end, before))
 
     def getElementByID(self, id, start=None, end=None, before=None):
-        if (not self.html): return Dict()
-        ele = getElementByID(id, self.html, start, end, before)
+        if (not self['html']): return Dict()
+        ele = getElementByID(id, self['html'], start, end, before)
         return RegexDictNew(ele, root=self._rootNode, parent=self)
 
     def getElementByTag(self, tag, start=None, end=None, before=None):
-        if (not self.html): return Dict()
-        ele = getElementByTag(tag, self.html, start, end, before)
+        if (not self['html']): return Dict()
+        ele = getElementByTag(tag, self['html'], start, end, before)
         return RegexDictNew(ele, root=self._rootNode, parent=self)
 
     def getElementByClass(self, className, start=None, end=None, before=None):
-        if (not self.html): return Dict()
-        ele = getElementByClass(className, self.html, start, end, before)
+        if (not self['html']): return Dict()
+        ele = getElementByClass(className, self['html'], start, end, before)
         return RegexDictNew(ele, root=self._rootNode, parent=self)
 
     def getElementsByTag(self, tag, start=None, end=None, before=None):
-        if (not self.html): return List()
-        eles = getElementsByTag(tag, self.html, start, end, before)
+        if (not self['html']): return List()
+        eles = getElementsByTag(tag, self['html'], start, end, before)
         return self._convert2lst(eles, parent=self)
 
     def getElementsByClass(self, className, start=None, end=None, before=None):
-        if (not self.html): return List()
-        eles = getElementsByClass(className, self.html, start, end, before)
+        if (not self['html']): return List()
+        eles = getElementsByClass(className, self['html'], start, end, before)
         return self._convert2lst(eles, parent=self)
 
     def getElementByAttr(self, attr, value, start=None, end=None, before=None):
-        if (not self.html): return Dict()
-        ele = getElementByAttr(attr, value, self.html, start, end, before)
+        if (not self['html']): return Dict()
+        ele = getElementByAttr(attr, value, self['html'], start, end, before)
         return RegexDictNew(ele, root=self._rootNode, parent=self)
 
     def getElement(self,
@@ -124,8 +123,8 @@ class RegexDict(Dict):
                    start=None,
                    end=None,
                    before=None):
-        if (not self.html): return Dict()
-        ele = getElement(tag, attr, value, self.html, start, end, before)
+        if (not self['html']): return Dict()
+        ele = getElement(tag, attr, value, self['html'], start, end, before)
         return RegexDictNew(ele, root=self._rootNode, parent=self)
 
     def removeElement(self,
@@ -135,8 +134,8 @@ class RegexDict(Dict):
                       start=None,
                       end=None,
                       before=None):
-        if (self.html):
-            self['html'] = removeElement(tag, attr, value, self.html, start,
+        if (self['html']):
+            self['html'] = removeElement(tag, attr, value, self['html'], start,
                                          end, before)
         return self
 
@@ -147,11 +146,11 @@ class RegexDict(Dict):
                        start=None,
                        end=None,
                        before=None):
-        if (self.html):
+        if (self['html']):
             while True:
-                tmp = removeElement(tag, attr, value, self.html, start, end,
+                tmp = removeElement(tag, attr, value, self['html'], start, end,
                                     before)
-                if tmp != self.html:
+                if tmp != self['html']:
                     self['html'] = tmp
                 else:
                     break
@@ -164,8 +163,8 @@ class RegexDict(Dict):
                     start=None,
                     end=None,
                     before=None):
-        if (not self.html): return List()
-        eles = getElements(tag, attr, value, self.html, start, end, before)
+        if (not self['html']): return List()
+        eles = getElements(tag, attr, value, self['html'], start, end, before)
         return self._convert2lst(eles, self)
 
     def getElementByText(self,
@@ -174,8 +173,8 @@ class RegexDict(Dict):
                          start=None,
                          end=None,
                          before=None):
-        if (not self.html): return Dict()
-        ele = getElementByText(text, tag, self.html, start, end, before)
+        if (not self['html']): return Dict()
+        ele = getElementByText(text, tag, self['html'], start, end, before)
         return RegexDictNew(ele, root=self._rootNode, parent=self)
 
     def getElementByReg(self,
@@ -184,54 +183,59 @@ class RegexDict(Dict):
                         start=None,
                         end=None,
                         before=None):
-        if (not self.html): return Dict()
-        ele = getElementByReg(regex, tag, self.html, start, end, before)
+        if (not self['html']): return Dict()
+        ele = getElementByReg(regex, tag, self['html'], start, end, before)
         return RegexDictNew(ele, root=self._rootNode, parent=self)
 
     def getElementsByReg(self,
                          regex,
                          tag=None,
+                         html=None,
                          start=None,
                          end=None,
                          before=None):
-        html = self.html  # TODO: yazz
+        if (not html): html = self['html']
         lst = List()
-        if (not html): return lst
         ele = getElementByReg(regex, tag, html, start, end, before)
-        ele = RegexDictNew(ele, root=self._rootNode, parent=self)
+        root = self._rootNode
+        parent = None
+        if not root:
+            root = self
+        else:
+            parent = self
+        ele = RegexDictNew(ele, root=root, parent=parent)
         while ele:
             lst.append(ele)
-            s = ele._end - self._start - self._rootNode.html.index(
-                '>', self._start)
+            s = ele._end - (self._start or -2) - 2
             ele = getElementByReg(regex, tag, html, s, end)
             if not ele: break
-            ele = RegexDictNew(ele, root=self._rootNode, parent=self)
-            if ele._end >= len(html):
+            ele = RegexDictNew(ele, root=root, parent=parent)
+            if s >= len(html):
                 break
 
         return lst
 
     def getParent(self, tag=None):
         if (not self._rootNode): return Dict()
-        html = self._rootNode.html
+        html = self._rootNode['html']
         ele = getParent4Ele(html, self, tag)
         return RegexDictNew(ele, root=self._rootNode)
 
     def getNexts(self, tag=None):
         if (not self._rootNode): return List()
-        html = self._rootNode.html
+        html = self._rootNode['html']
         eles = getNexts4Ele(html, self, tag)
         return self._convert2lst(eles, s=self._end)
 
     def getPrevious(self, tag=None):
         if (not self._rootNode): return List()
-        html = self._rootNode.html
+        html = self._rootNode['html']
         eles = getPrevious4Ele(html, self, tag)
         return self._convert2lst(eles)
 
     def getNext(self, tag=None):
         if (not self._rootNode): return Dict()
-        html = self._rootNode.html
+        html = self._rootNode['html']
         eles = getNext4Ele(html, self, tag)
         return RegexDictNew(eles, root=self._rootNode, s=0)  #self._end)
 
@@ -262,7 +266,7 @@ class RegexDict(Dict):
                 return table
             else:
                 return rows
-        rows = getListByReg(table.html, rowReg)
+        rows = getListByReg(table['html'], rowReg)
         table = List()
         for row in rows:
             tds = getListByReg(row, colReg)
@@ -277,15 +281,20 @@ class RegexDict(Dict):
         return table
 
     def getChild(self, tag=None, start=None, end=None, before=None):
-        if (not self.html): return None
-        eles = getChild(self.html, tag, start, end, before)
-        s = self._rootNode.html.find('>', self._start) + 1
-        return RegexDictNew(eles, root=self._rootNode, s=s)
+        if (not self['html']): return None
+        eles = getChild(self['html'], tag, start, end, before)
+        _root = self._rootNode
+        if not _root:
+            _root = self
+            s = 0
+        else:
+            s = _root['html'].find('>', self._start) + 1
+        return RegexDictNew(eles, root=_root, s=s)
 
     def getChildren(self, tag=None, start=None, end=None, before=None):
-        if (not self.html): return List()
-        eles = getChildren(self.html, tag, start, end, before)
-        s = self._rootNode.html.find('>', self._start) + 1
+        if (not self['html']): return List()
+        eles = getChildren(self['html'], tag, start, end, before)
+        s = self._rootNode['html'].find('>', self._start) + 1
         return self._convert2lst(eles, s=s)
 
     def getText(self, separator='', tags=None):
@@ -299,38 +308,59 @@ class RegexDict(Dict):
         start = html.find('>')
         end = html.rfind('<')
         self["html"] = text  #
-        h = self._rootNode.html
+        h = self._rootNode['html']
         html = html[0:start + 1] + text + html[end:]
         self._rootNode['html'] = h[0:self._start] + html + h[self._end:]
         self._end = self._start + len(html)  #+1
         _updatePosition(self._rootNode, self._start, self._end, oldEnd)
 
+    def createElement(self, tag, text='', **attrs):
+        html = None
+        if text == None:
+            html = '<{} />'.format(tag)
+        else:
+            html = '<{}>{}</{}>'.format(tag, text, tag)
+
+        if attrs:
+            tmp = ''
+            for k, v in attrs.items():
+                tmp = tmp + ' ' + k + '="' + v + '"'
+            html = html[:len(tag) + 1] + tmp + html[len(tag) + 1:]
+        if self._rootNode == None and self['html'] == '':
+            self['html'] = html
+
+        return html
+
     # TODO: add space
     def appendChild(self, html):
         if isinstance(html, Dict):
             html = html.selfHtml
-        self.setContent(self.html + html)
+        self.setContent(self['html'] + html)
 
     # TODO: add space
     def insertChild(self, html):
         if isinstance(html, Dict):
             html = html.selfHtml
-        self.setContent(html + self.html)
+        self.setContent(html + self['html'])
 
     def setAttrs(self, attrs):
-        if not attrs or not isinstance(attrs, dict):
+        ks = []
+        if attrs and isinstance(attrs, dict):
+            for k in attrs:
+                ks.append(k)
+        else:
             print("error parameter")
             return
-        ks = []
-        for k in attrs:
-            ks.append(k)
         i = len(ks)
         while i > 0:
             i -= 1
             k = ks[i]
-            self.setAttr(k, attrs[k])
+            self._setAttr(k, attrs[k])
 
-    def setAttr(self, key, value):
+    def setAttr(self, **attrs):
+        self.setAttrs(attrs)
+
+    def _setAttr(self, key, value):
         html = self.outerHtml
         oldEnd = self._end
         if self.get(key) == None:
@@ -346,7 +376,7 @@ class RegexDict(Dict):
                 html = replaceReg(html, reg, "", 1)
             else:
                 html = replaceReg(html, reg, " " + key + '="' + value + '"', 1)
-        h = self._rootNode.html
+        h = self._rootNode['html']
         self._rootNode['html'] = h[0:self._start] + html + h[self._end:]
         self._end = self._start + len(html)
         if value == None:
@@ -359,7 +389,7 @@ class RegexDict(Dict):
     def insertBefore(self, html):
         if isinstance(html, Dict):
             html = html.selfHtml
-        h = self._rootNode.html
+        h = self._rootNode['html']
         oldEnd = self._end
         h = h[0:self._start] + html + h[self._start:self._end] + h[self._end:]
         self._rootNode['html'] = h
@@ -372,15 +402,16 @@ class RegexDict(Dict):
     def insertAfter(self, html):
         if isinstance(html, Dict):
             html = html.selfHtml
-        h = self._rootNode.html
+        h = self._rootNode['html']
         h = h[0:self._start] + h[self._start:self._end] + html + h[self._end:]
         self._rootNode['html'] = h
         _updatePosition(self._rootNode, self._start, self._start + len(html),
                         self._start)
 
     def remove(self):
+        oldStart = self._start
         oldEnd = self._end
-        h = self._rootNode.html
+        h = self._rootNode['html']
         s = h.rfind('\n', 0, self._start)
         e = h.find('\n', self._end)
         if s >= 0 and e >= 0:
@@ -389,48 +420,35 @@ class RegexDict(Dict):
                 self._start = s
         h = h[0:self._start] + h[self._end:]
         self._rootNode['html'] = h
+        if self._rootNode._elements.get(oldStart):
+            del self._rootNode._elements[oldStart]
         _updatePosition(self._rootNode, self._start, self._start, oldEnd)
-        self._start = 0
-        self._end = 0
+        # self._start = -1
+        # self._end = 0
         self.clear()
 
-    def repleaceSelf(self, html):
+    def replaceSelf(self, html):
         if isinstance(html, Dict):
             html = html.selfHtml
+        oldStart = self._start
         oldEnd = self._end
-        h = self._rootNode.html
+        h = self._rootNode['html']
         h = h[0:self._start] + html + h[self._end:]
         self._rootNode['html'] = h
-        start = html.find('>')
-        end = html.rfind('<')
-        s = None
-        if start > 0 and end >= 0:
-            if end > start:
-                s = convert2Dic(html[0:start + 1])
-                s['html'] = html[start + 1:end]
-            else:
-                s = convert2Dic(html)
-                s['html'] = ""
-        if s:
-            # s = RegexDict(s)
-            self._end = self._start + len(html)
-            self.clear()
-            self.update(s)
-            _updatePosition(self._rootNode, self._start, self._end, oldEnd)
-        else:
-            _updatePosition(self._rootNode, self._start,
-                            self._start + len(html), oldEnd)
-            self._start = 0
-            self._end = 0
-            self.clear()
-        return self
+        if self._rootNode._elements.get(oldStart):
+            del self._rootNode._elements[oldStart]
+        _updatePosition(self._rootNode, self._start, self._start + len(html),
+                        oldEnd)
+        # self._start = -1
+        # self._end = 0
+        self.clear()
 
     def nextText(self, end=None):
-        if not self._rootNode or not self._rootNode.html:
+        if not self._rootNode or not self._rootNode['html']:
             return ''
         start = self._end
         s = start
-        html = self._rootNode.html
+        html = self._rootNode['html']
         if end:
             e = html.find(end, s)
             if e > s:
@@ -447,11 +465,11 @@ class RegexDict(Dict):
             s += m
 
     def previousText(self):
-        if not self._rootNode or not self._rootNode.html:
+        if not self._rootNode or not self._rootNode['html']:
             return ''
         end = self._start
         s = end
-        html = self._rootNode.html
+        html = self._rootNode['html']
         while True:
             s = html.rfind('>', 0, s)
             r = html.rfind('<', 0, s)
@@ -463,11 +481,11 @@ class RegexDict(Dict):
             return html[r + m + 1:end].strip()
 
     def firstText(self):
-        if not self.html:
+        if not self['html']:
             return ''
         start = 0
         s = start
-        html = self.html
+        html = self['html']
         while True:
             end = html.find('<', s)
             r = html.find('>', s)
@@ -479,9 +497,9 @@ class RegexDict(Dict):
             s += m
 
     def trimHtml(self):
-        if (not self.html): return None
-        self['html'] = trimHtml(self.html)
-        return self.html
+        if (not self['html']): return None
+        self['html'] = trimHtml(self['html'])
+        return self['html']
 
     def _convert2lst(self, eles, parent=None, s=None):
         lst = List()
@@ -492,9 +510,9 @@ class RegexDict(Dict):
         return lst
 
     def replaceReg(self, regex, new):
-        if self.html:
-            self['html'] = replaceReg(self.html, regex, new)
-        return self.html
+        if self['html']:
+            self['html'] = replaceReg(self['html'], regex, new)
+        return self['html']
 
     def getSectionByReg(self,
                         regex,
@@ -502,7 +520,7 @@ class RegexDict(Dict):
                         start=None,
                         end=None,
                         before=None):
-        return getOneByReg(self.html, regex, group, start, end, before)
+        return getOneByReg(self['html'], regex, group, start, end, before)
 
     def getSectionsByReg(self,
                          regex,
@@ -510,7 +528,7 @@ class RegexDict(Dict):
                          start=None,
                          end=None,
                          before=None):
-        return getListByReg(self.html, regex, group, start, end, before)
+        return getListByReg(self['html'], regex, group, start, end, before)
 
     def select(self, value, start=None, end=None, before=None):
         return _select(self, value, start, end, before)
@@ -680,27 +698,42 @@ def _getParas(value):
 
 
 def _updatePosition(root, s, d, end):
+    changes = {}
+    dels = []
     eles = root._elements
-    for e in eles:
-        # if e._start==s or e._end<s: continue
+    for e in eles.values():
         if e._start < s and e._end > end:
             e._end = e._end + d - end
-        elif e._start > end:
+        elif e._start > end and d != end:
+            dels.append(e._start)
+
             e._start = e._start + d - end
             e._end = e._end + d - end
+
+            changes[e._start] = e
+        # elif e._start < 0:
+        #     dels.append(e._start)
+    if dels:
+        for k in dels:
+            del eles[k]
+        eles.update(changes)
 
 
 def RegexDictNew(dic, root, parent=None, s=None):
     if not dic: return Dict()
     ele = RegexDict(dic)
     _s = 0
+    if not root:
+        root = parent
+        parent = None
+
     if s != None: _s = s
     elif parent:
-        _s = root.html.find('>', parent._start) + 1
+        _s = root['html'].find('>', parent._start) + 1
     ele._start = dic._start + _s
     ele._end = dic._end + _s
     ele._rootNode = root
     ele._parentNode = parent
     if root and root._editFlag:
-        root._elements.append(ele)
+        root._elements[ele._start] = ele
     return ele

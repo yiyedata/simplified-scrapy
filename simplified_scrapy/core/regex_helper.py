@@ -291,9 +291,9 @@ def _checkSingleTag(tag, html=None, i=0):
         if index < 0:
             index = html.find('<' + tag + '>')
         tmp = html[index + 2:end]
-        index = html.find('<' + tag + ' ')
+        index = tmp.find('<' + tag + ' ')
         if index < 0:
-            index = html.find('<' + tag + '>')
+            index = tmp.find('<' + tag + '>')
         if index >= 0:
             return True
 
@@ -310,6 +310,18 @@ def _checkSingleTag(tag, html=None, i=0):
     return False
 
 
+def _checkSingleTagByReg(pattern, html, tag):
+    m = pattern.search(html)
+    if m:
+        dom = m.group(0)
+        if dom[-2:] == '/>':
+            return True
+        start = html.find(dom)
+        return _checkSingleTag(tag, html[start:])
+
+    return False
+
+
 def _getElementByTag(tag, html, start=None, end=None, before=None):
     if (not tag or not html): return None
     section = getSection(html, start, end, before)
@@ -319,6 +331,11 @@ def _getElementByTag(tag, html, start=None, end=None, before=None):
 
     html = html[s:e]
     if (not html): return None
+    if isinstance(tag, list):
+        if len(tag) == 1:
+            t = tag[0]
+            tag = None
+            tag = t
     if isinstance(tag, list):
         tags = tag
         index = len(html)
@@ -336,13 +353,14 @@ def _getElementByTag(tag, html, start=None, end=None, before=None):
                 tag = t
                 index = tmp2
     if isinstance(tag, list) or html.find('<' + tag) < 0: return None
-    singleTag = _checkSingleTag(tag, html)
-    if (singleTag):
-        pattern = _getRegex(u'<' + _dealRegChar(tag) + '([\s]+|)[^>]*?>')
-    else:
+
+    pattern = _getRegex(u'<' + _dealRegChar(tag) + '([\s]+|)[^>]*?>')
+    singleTag = _checkSingleTagByReg(pattern, html, tag)
+    if (not singleTag):
         pattern = _getRegex(u'<' + _dealRegChar(tag) +
                             '([\s]+[^>]*?>|>)[\s\S]*?</' + _dealRegChar(tag) +
                             '>')
+
     m = pattern.search(html)
     if m:
         dom = m.group(0)
@@ -350,6 +368,7 @@ def _getElementByTag(tag, html, start=None, end=None, before=None):
         end = start + len(dom)
         if (singleTag):
             ele = convert2Dic(dom)
+            ele['html'] = ''
             ele._start = start + s
             ele._end = end + s
             return (ele, start, end)
@@ -551,6 +570,11 @@ def _getElement(tag,
                     break
         if not tag: return None
         if isinstance(tag, list):
+            if len(tag) == 1:
+                t = tag[0]
+                tag = None
+                tag = t
+        if isinstance(tag, list):
             tags = tag
             index = len(html)
             for t in tags:
@@ -567,18 +591,19 @@ def _getElement(tag,
                     tag = t
                     index = tmp2
         if isinstance(tag, list) or html.find('<' + tag) < 0: return None
-        singleTag = _checkSingleTag(tag, html, index)
         value = _dealRegChar(value)
-        if (singleTag):
-            strP = u'<' + _dealRegChar(tag) + '[\s]+[^>]*?' + _dealRegChar(
-                attr
-            ) + '[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)' + value + '([\s\'"][\s\S]*?|)>'
-        else:
+        strP = u'<' + _dealRegChar(tag) + '[\s]+[^>]*?' + _dealRegChar(
+            attr
+        ) + '[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)' + value + '([\s\'"][\s\S]*?|)>'
+
+        pattern = _getRegex(strP)
+        singleTag = _checkSingleTagByReg(pattern, html, tag)
+        if not singleTag:
             strP = u'<' + _dealRegChar(tag) + '[\s]+[^>]*?' + _dealRegChar(
                 attr
             ) + '[=\'"\s]+([\w\-\.]+[\s\w\-\.]*[ ]|\s*|)' + value + '([\s\'"][\s\S]*?|)>[\s\S]*?</' + _dealRegChar(
                 tag) + '>'
-        pattern = _getRegex(strP)
+            pattern = _getRegex(strP)
         m = pattern.search(html)
         if m:
             dom = m.group(0)
@@ -586,6 +611,7 @@ def _getElement(tag,
             end = start + len(dom)
             if (singleTag):
                 ele = convert2Dic(dom)
+                ele['html'] = ''
                 ele._start = start + s
                 ele._end = end + s
                 return (ele, start, end)
@@ -655,19 +681,25 @@ def getElementByReg(regex,
     s = section[0]
     e = section[1]
     if (s < 0 or e < s or s == e): return None
-    html = html[s:e]
-    start = _getStartByReg(regex, html, 0)  # html.find(text,start)
+    h = html[s:e]
+    start = _getStartByReg(regex, h, 0)
     if start < 0: return None
-    start = html.rfind('<', 0, start)
+    nextStart = start + s + len(regex)  #
+
+    start = h.rfind('<', 0, start)
 
     if not tag: tag = ''
     selectStr = '<' + tag
-    start = html.rfind(selectStr, 0, start + len(selectStr))
-    end = html.find('>', start) + 1
-    tagLeft = html[start:end]
+    start = h.rfind(selectStr, 0, start + len(selectStr))
+    if start < 0:  #
+        return getElementByReg(regex, tag=tag, html=html, start=nextStart)
+
     if not tag:
+        end = h.find('>', start) + 1
+        tagLeft = h[start:end]
         tag = _getTag(tagLeft, len(tagLeft), None, 0)
-    return getElementByTag(tag, html, start)
+    ele = getElementByTag(tag, html, start + s)
+    return ele
 
 
 def getElementByText(text,
@@ -681,27 +713,33 @@ def getElementByText(text,
     s = section[0]
     e = section[1]
     if (s < 0 or e < s): return None
-    html = html[s:e]
+    h = html[s:e]
     start = 0
+    nextStart = 0
     while True:
-        start = html.find(text, start)
+        start = h.find(text, start)
         if start < 0: return None
-        l = html.rfind('<', 0, start)
-        r = html.find('<', start)
-        rr = html.find('>', start, r)
-        if html.find('>', l, start) > 0 and rr < 0:
+        nextStart = start + s + len(text)
+
+        l = h.rfind('<', 0, start)
+        r = h.find('<', start)
+        rr = h.find('>', start, r)
+        if h.find('>', l, start) > 0 and rr < 0:
             break
         start = rr
 
     if not tag: tag = ''
     selectStr = '<' + tag
-    start = html.rfind(selectStr, 0, start)
-    end = html.find('>', start) + 1
+    start = h.rfind(selectStr, 0, start)
+    if start < 0:
+        return getElementByText(text, tag=tag, html=html, start=nextStart)
 
-    tagLeft = html[start:end]
+    end = h.find('>', start) + 1
+
+    tagLeft = h[start:end]
     if not tag:
         tag = _getTag(tagLeft, len(tagLeft), None, 0)
-    return getElementByTag(tag, html, start)
+    return getElementByTag(tag, html, start + s)
 
 
 def _getTagCount(html, tags):
@@ -974,32 +1012,6 @@ def getNext4Ele(html, ele, tag=None):
     if (ele):
         start = ele._end
         return getChild(html, tag, start=start)
-        # end = start
-        # l = html.find('<',end)
-        # r = html.find('>',end)
-        # if (r<l or l<0 or r<0): return None
-        # tagHtml = html[l:r+1]
-        # tag = _getTag(tagHtml,r-l+1,None,0)
-        # if not tag: return None
-        # if _checkSingle(tagHtml,0):
-        #   # start = html.find('<'+tag,start)
-        #   end = html.find('>',end)+1
-        # else:
-        #   while True:
-        #     l = html.find('<'+tag,end)
-        #     r = html.find('</'+tag,end)
-        #     if r>=0 and (l>r or l<0) :
-        #       end = r+len(tag)+3
-        #       break
-        #     if r>l: end=r+len(tag)+3
-        #     else: return None
-
-        # end = _getEnd4Tag(html,start,tag)
-        # if not end:
-        #   if html[start:start+2] != '</': end = len(html)
-        # if(start != None and end != None):
-        #   html = html[start:end]
-        #   return getChild(html)
     return None
 
 

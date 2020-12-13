@@ -68,6 +68,14 @@ def saveFile(name, text, encoding="utf-8", mode='w', **other):
         file.write(u'{}\n'.format(text))
 
 
+def getFileLineIterable(name, encoding="utf-8", **other):
+    with io.open(name, "r", encoding=encoding, **other) as file:
+        line = file.readline()
+        while line != '':
+            yield line
+            line = file.readline()
+
+
 def appendFile(name, text, encoding="utf-8", **other):
     with io.open(name, 'a', encoding=encoding, **other) as file:
         file.write(u'{}\n'.format(text))
@@ -117,25 +125,25 @@ def createDir(name, count=1):
             os.mkdir(p)
 
 
-def getSubDir(name, end=None, have=None, notHave=None):
-    filelist = os.listdir(name)
-    if have or notHave or end:
-        filelist = [
-            os.path.join(name, l) for l in filelist
-            if _checkName(l, end, have, notHave)
-        ]
+def getSubFile(path, end=None, have=None, notHave=None, all=True, **other):
+    filelist = []
+    for root, _, files in os.walk(path, **other):
+        for name in files:
+            if _checkName(name, end, have, notHave):
+                filelist.append(os.path.join(root, name))
+        if not all:
+            break
     return filelist
 
 
-def getSubFile(name, end=None, have=None, notHave=None):
-    filelist = getSubDir(name, end, have, notHave)
-    filelist = [l for l in filelist if isExistsFile(l)]
-    return filelist
-
-
-def getSubFolder(name, end=None, have=None, notHave=None):
-    filelist = getSubDir(name, end, have, notHave)
-    filelist = [l for l in filelist if isExistsDir(l)]
+def getSubFolder(path, end=None, have=None, notHave=None, all=False, **other):
+    filelist = []
+    for root, dirs, _ in os.walk(path, **other):
+        for name in dirs:
+            if _checkName(name, end, have, notHave):
+                filelist.append(os.path.join(root, name))
+        if not all:
+            break
     return filelist
 
 
