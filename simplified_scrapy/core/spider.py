@@ -277,7 +277,8 @@ class Spider():
                 _lastResetTime = Configs().getValue(configKey)
                 if (now > planTime
                         and (not _lastResetTime
-                             or convertStr2Time(_lastResetTime) < planTime)):
+                             or float(_lastResetTime) < time.mktime(planTime))):
                     self.url_store.resetUrls(self.start_urls)
-                    Configs().setValue(configKey, convertTime2Str(planTime))
-                    return
+                    Configs().setValue(configKey, float(time.mktime(planTime)))
+                    return True
+        return False

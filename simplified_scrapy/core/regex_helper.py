@@ -702,6 +702,25 @@ def getElementByReg(regex,
     return ele
 
 
+def _rFindTag(s, end):
+    l = s.rfind('<', 0, end)
+    if l > 0:
+        if s[l - 1] == '=' or s[l + 1] == '=' or s[l + 1] == ' ':
+            return _rFindTag(s, l)
+    return l
+
+
+def _findTag(s, c, start, end=None):
+    if end:
+        l = s.find(c, start, end)
+    else:
+        l = s.find(c, start)
+    if l > 0:
+        if s[l - 1] == '=' or s[l + 1] == '=' or (
+            c=='<' and s[l + 1] == ' ') or (c=='>' and s[l - 1] == ' '):
+            return _rFindTag(s, l)
+    return l
+
 def getElementByText(text,
                      tag=None,
                      html=None,
@@ -721,10 +740,10 @@ def getElementByText(text,
         if start < 0: return None
         nextStart = start + s + len(text)
 
-        l = h.rfind('<', 0, start)
-        r = h.find('<', start)
-        rr = h.find('>', start, r)
-        if h.find('>', l, start) > 0 and rr < 0:
+        l = _rFindTag(h, start)
+        r = _findTag(h, '<', start)
+        rr = _findTag(h, '>', start, r)
+        if _findTag(h, '>', l, start) > 0 and rr < 0:
             break
         start = rr
 

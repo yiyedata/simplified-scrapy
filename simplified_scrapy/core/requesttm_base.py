@@ -3,6 +3,7 @@
 class RequestTmBase:
   def addRecode(self, ssp, url, tmSpan, state, concurrency,countPer10s,size):
     raise NotImplementedError
+
   def startRecode(self):
     raise NotImplementedError
   def startServer(self):

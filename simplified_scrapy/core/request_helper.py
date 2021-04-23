@@ -85,7 +85,7 @@ def _getMaintype(res):
 def _checkMaintype(maintype):
     types = ['xml', 'plain', 'text', 'html', 'json', 'javascript', 'java']
     for t in types:
-        if (maintype.find(t) >= 0):
+        if (maintype and maintype.find(t) >= 0):
             return True
     return False
 
@@ -150,6 +150,54 @@ def requestPost(url,
         if response and _checkMaintype(_getMaintype(response)):
             response.close()
     return "_error_"
+
+
+def requestRaw(url,
+                data,
+                headers=None,
+                useIp=False,
+                ssp=None,
+                timeout=30,
+                error=False,
+                method=None,
+                extra=None):
+    _head = _defaultHeaderPost
+    if (data and (isinstance(data, dict) or isinstance(data, list))):
+        _head = _jsonHeaderPost
+        data = json.dumps(data)
+    if headers: header = headers
+    else: header = copy.deepcopy(_head)
+    useragent = None
+    proxyips = None
+    if ssp:
+        useragent = ssp.useragent
+        proxyips = ssp.proxyips
+    if (not useragent):
+        if (spider_resource and spider_resource.useragent):
+            useragent = spider_resource.useragent
+    if (not proxyips):
+        if (spider_resource and spider_resource.proxyips):
+            proxyips = spider_resource.proxyips
+    try:
+        if (headers and not headers.get('User-Agent') and useragent):
+            header['User-Agent'] = random.choice(useragent)
+        if (sys.version_info.major == 3):
+            if (data): data = data.encode("utf-8")
+        req = urllib2.Request(url, data, header)
+        if method: req.get_method = lambda: method.upper()
+        if (ssp):
+            req = ssp.beforeRequest(url, req, extra)
+        opener = None
+        if (useIp or (ssp and (ssp.use_ip or ssp.proxyips))):
+            p = url[0:url.index(':')]
+            if (proxyips and proxyips.get(p)):
+                opener = _setProxy(p, random.choice(proxyips[p]))
+        if (not opener): opener = urllib2.build_opener()
+
+        return opener.open(req, None, timeout)
+    except Exception as err:
+        log(err, url)
+    return None
 
 
 def _getCookie(response):
