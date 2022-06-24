@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #coding=utf-8
 import logging
-import threading, traceback, time, importlib, imp, os, json, io
+import threading, traceback, time, importlib, os, json, io
 from imp import reload
 from simplified_scrapy.dictex import Dict
 from concurrent.futures import ThreadPoolExecutor
