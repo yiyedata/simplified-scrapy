@@ -1,8 +1,8 @@
 #!/usr/bin/python
 #coding=utf-8
 import logging
-import threading, traceback, time, importlib, imp, os, json, io
-from imp import reload
+import threading, traceback, time, importlib, os, json, io
+from importlib import reload
 from simplified_scrapy.dictex import Dict
 from concurrent.futures import ThreadPoolExecutor
 from simplified_scrapy.core.utils import printInfo, getFileModifyTime, isExistsFile, getTimeNow, appendFile
