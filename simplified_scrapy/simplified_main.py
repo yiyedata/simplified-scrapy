@@ -2,7 +2,7 @@
 #coding=utf-8
 import logging
 import threading, traceback, time, importlib, os, json, io
-from imp import reload
+from importlib import reload
 from simplified_scrapy.dictex import Dict
 from concurrent.futures import ThreadPoolExecutor
 from simplified_scrapy.core.utils import printInfo, getFileModifyTime, isExistsFile, getTimeNow, appendFile
